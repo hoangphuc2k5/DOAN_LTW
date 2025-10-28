@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head><title>Reports</title></head>
+<body>
+<div layout:fragment="content">
+    <h3><i class="bi bi-flag text-danger"></i> Reports</h3>
+    <hr>
+
+    <table class="table table-striped">
+        <thead>
+        <tr><th>ID</th><th>Type</th><th>Details</th><th>Status</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="r : ${reports}">
+            <td th:text="${r.id}">1</td>
+            <td th:text="${r.entityType}">Question</td>
+            <td th:text="${r.details}">details</td>
+            <td th:text="${r.status}">OPEN</td>
+            <td>
+                <form th:action="@{/manager/reports/{id}/resolve(id=${r.id})}" method="post">
+                    <input type="hidden" name="status" value="RESOLVED">
+                    <input type="hidden" name="note" value="Resolved by manager">
+                    <button class="btn btn-success btn-sm"><i class="bi bi-check"></i> Resolve</button>
+                </form>
+            </td>
+        </tr>
+        <tr th:if="${reports == null or reports.isEmpty()}">
+            <td colspan="5" class="text-center text-muted">No open reports</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
