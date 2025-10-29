@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="${question.title}">Question Title</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/}"><i class="bi bi-house"></i> Home</a></li>
+            <li class="breadcrumb-item"><a href="#">Questions</a></li>
+            <li class="breadcrumb-item active" aria-current="page" th:text="${#strings.abbreviate(question.title, 50)}">Current</li>
+        </ol>
+    </nav>
+
+    <!-- Alert Messages -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show">
+        <i class="bi bi-check-circle"></i> <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show">
+        <i class="bi bi-exclamation-triangle"></i> <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Question Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                    <h1 class="h3 mb-2" th:text="${question.title}">Question Title</h1>
+                    <div class="text-muted small">
+                        <span>Asked <strong th:text="${#temporals.format(question.createdAt, 'MMM dd, yyyy ''at'' HH:mm')}">date</strong></span>
+                        <span class="ms-3">Modified <strong th:text="${#temporals.format(question.updatedAt, 'MMM dd, yyyy')}">date</strong></span>
+                        <span class="ms-3">Viewed <strong th:text="${question.views} + ' times'">0 times</strong></span>
+                    </div>
+                </div>
+                <div>
+                    <a th:href="@{/questions/ask}" class="btn btn-primary" sec:authorize="isAuthenticated()">
+                        <i class="bi bi-plus-circle"></i> Ask Question
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="row">
+                <!-- Vote Section -->
+                <div class="col-auto">
+                    <div class="vote-buttons">
+                        <form th:action="@{/questions/{id}/vote(id=${question.id})}" method="post" th:if="${#authorization.expression('isAuthenticated()')}">
+                            <input type="hidden" name="voteType" value="UP">
+                            <button type="submit" class="vote-btn" th:classappend="${userHasUpvoted} ? 'voted' : ''">
+                                <i class="bi bi-caret-up-fill"></i>
+                            </button>
+                        </form>
+                        <button class="vote-btn" th:unless="${#authorization.expression('isAuthenticated()')}" 
+                                data-bs-toggle="tooltip" title="Login to vote">
+                            <i class="bi bi-caret-up-fill"></i>
+                        </button>
+                        
+                        <div class="vote-count" th:text="${question.votes}">0</div>
+                        
+                        <form th:action="@{/questions/{id}/vote(id=${question.id})}" method="post" th:if="${#authorization.expression('isAuthenticated()')}">
+                            <input type="hidden" name="voteType" value="DOWN">
+                            <button type="submit" class="vote-btn" th:classappend="${userHasDownvoted} ? 'voted' : ''">
+                                <i class="bi bi-caret-down-fill"></i>
+                            </button>
+                        </form>
+                        <button class="vote-btn" th:unless="${#authorization.expression('isAuthenticated()')}"
+                                data-bs-toggle="tooltip" title="Login to vote">
+                            <i class="bi bi-caret-down-fill"></i>
+                        </button>
+                        
+                        <!-- Bookmark -->
+                        <button class="vote-btn mt-3" data-bs-toggle="tooltip" title="Bookmark this question" sec:authorize="isAuthenticated()">
+                            <i class="bi bi-bookmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Content Section -->
+                <div class="col">
+                    <!-- Badges -->
+                    <div class="mb-3" th:if="${question.isPinned or question.isLocked}">
+                        <span class="badge badge-pinned" th:if="${question.isPinned}">
+                            <i class="bi bi-pin-angle-fill"></i> Pinned by moderator
+                        </span>
+                        <span class="badge badge-locked" th:if="${question.isLocked}">
+                            <i class="bi bi-lock-fill"></i> Locked - No new answers
+                        </span>
+                    </div>
+
+                    <!-- Question Body -->
+                    <div class="question-body mb-4" th:utext="${question.body}">
+                        Question content here...
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="mb-4">
+                        <a th:each="tag : ${question.tags}" 
+                           th:href="@{/tags/{name}(name=${tag.name})}" 
+                           class="tag-badge"
+                           th:text="${tag.name}">tag</a>
+                    </div>
+
+                    <!-- Question Actions -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-secondary" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#shareModal">
+                                <i class="bi bi-share"></i> Share
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" 
+                                    th:if="${#authorization.expression('isAuthenticated()')}"
+                                    th:attr="data-question-id=${question.id}">
+                                <i class="bi bi-flag"></i> Report
+                            </button>
+                            <a th:href="@{/questions/{id}/edit(id=${question.id})}" 
+                               class="btn btn-sm btn-outline-primary"
+                               th:if="${question.author.username == #authentication.name or #authorization.expression('hasRole(\'ADMIN\')')}">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <form th:action="@{/questions/{id}/delete(id=${question.id})}" 
+                                  method="post" 
+                                  th:if="${question.author.username == #authentication.name or #authorization.expression('hasRole(\'ADMIN\')')}"
+                                  onsubmit="return confirm('Are you sure you want to delete this question?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Author Card -->
+                        <div class="card" style="width: 200px;">
+                            <div class="card-body p-2">
+                                <small class="text-muted d-block">asked <span th:text="${#temporals.format(question.createdAt, 'MMM dd')}">date</span></small>
+                                <div class="d-flex align-items-center mt-2">
+                                    <img th:src="${question.author.profileImage != null ? question.author.profileImage : 'https://via.placeholder.com/32'}" 
+                                         class="rounded me-2" width="32" height="32" alt="avatar">
+                                    <div>
+                                        <a th:href="@{/users/{id}(id=${question.author.id})}" 
+                                           class="text-decoration-none fw-bold"
+                                           th:text="${question.author.username}">username</a>
+                                        <div class="small">
+                                            <span class="user-reputation" th:text="${question.author.reputation}">0</span>
+                                            <span class="user-badges ms-1">
+                                                <span class="user-badge" th:if="${question.author.badges != null and question.author.badges.size() > 0}">
+                                                    <i class="bi bi-circle-fill badge-gold"></i> <span th:text="${question.author.badges.size()}">0</span>
+                                                </span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comments -->
+                    <div class="comments-section">
+                        <div class="border-top pt-3">
+                            <div th:each="comment : ${question.comments}" class="comment-item">
+                                <span class="comment-text" th:text="${comment.body}">Comment text</span>
+                                – <a th:href="@{/users/{id}(id=${comment.author.id})}" 
+                                     class="text-decoration-none" 
+                                     th:text="${comment.author.username}">user</a>
+                                <span class="comment-meta">
+                                    <span th:text="${#temporals.format(comment.createdAt, 'MMM dd ''at'' HH:mm')}">date</span>
+                                </span>
+                                <div class="comment-actions" th:if="${comment.author.username == #authentication.name or #authorization.expression('hasRole(\'ADMIN\')')}">
+                                    <button class="comment-action" data-action="edit">edit</button>
+                                    <form th:action="@{/comments/{id}/delete(id=${comment.id})}" method="post" style="display: inline;">
+                                        <button type="submit" class="comment-action">delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                            
+                            <!-- Add Comment Form -->
+                            <div class="mt-3" sec:authorize="isAuthenticated()" th:unless="${question.isLocked}">
+                                <form th:action="@{/questions/{id}/comments(id=${question.id})}" method="post">
+                                    <div class="input-group">
+                                        <input type="text" name="body" class="form-control form-control-sm" 
+                                               placeholder="Add a comment..." required minlength="15">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-send"></i> Add comment
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Answers Section -->
+    <div class="mb-4">
+        <h4 class="mb-3">
+            <span th:text="${question.answerCount}">0</span> Answers
+            <span class="float-end">
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary active">
+                        <i class="bi bi-clock"></i> Newest
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-up"></i> Votes
+                    </button>
+                </div>
+            </span>
+        </h4>
+
+        <!-- Empty State -->
+        <div th:if="${answers.isEmpty()}" class="text-center py-5 bg-light rounded">
+            <i class="bi bi-chat-left-text display-4 text-muted"></i>
+            <h5 class="mt-3">No answers yet</h5>
+            <p class="text-muted">Be the first to answer this question!</p>
+        </div>
+
+        <!-- Answer List -->
+        <div th:each="answer : ${answers}" class="card mb-3" 
+             th:classappend="${answer.isAccepted} ? 'border-success' : ''">
+            <div class="card-body">
+                <div class="row">
+                    <!-- Vote Section -->
+                    <div class="col-auto">
+                        <div class="vote-buttons">
+                            <form th:action="@{/answers/{id}/vote(id=${answer.id})}" method="post" sec:authorize="isAuthenticated()">
+                                <input type="hidden" name="voteType" value="UP">
+                                <button type="submit" class="vote-btn">
+                                    <i class="bi bi-caret-up-fill"></i>
+                                </button>
+                            </form>
+                            
+                            <div class="vote-count" th:text="${answer.votes}">0</div>
+                            
+                            <form th:action="@{/answers/{id}/vote(id=${answer.id})}" method="post" sec:authorize="isAuthenticated()">
+                                <input type="hidden" name="voteType" value="DOWN">
+                                <button type="submit" class="vote-btn">
+                                    <i class="bi bi-caret-down-fill"></i>
+                                </button>
+                            </form>
+                            
+                            <!-- Accept Answer -->
+                            <form th:action="@{/answers/{id}/accept(id=${answer.id})}" method="post"
+                                  th:if="${question.author.username == #authentication.name and !answer.isAccepted}">
+                                <button type="submit" class="vote-btn mt-3" 
+                                        data-bs-toggle="tooltip" 
+                                        title="Accept this answer as the solution">
+                                    <i class="bi bi-check-circle" style="color: #5eba7d;"></i>
+                                </button>
+                            </form>
+                            <div class="mt-3" th:if="${answer.isAccepted}">
+                                <i class="bi bi-check-circle-fill" style="color: #5eba7d; font-size: 2rem;" 
+                                   data-bs-toggle="tooltip" 
+                                   title="Accepted answer"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Answer Content -->
+                    <div class="col">
+                        <!-- Accepted Badge -->
+                        <div class="alert alert-success mb-3" th:if="${answer.isAccepted}">
+                            <i class="bi bi-check-circle-fill"></i> <strong>Accepted Answer</strong> - This answer was marked as the solution
+                        </div>
+
+                        <!-- Answer Body -->
+                        <div class="answer-body mb-4" th:utext="${answer.body}">
+                            Answer content here...
+                        </div>
+
+                        <!-- Answer Actions -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-share"></i> Share
+                                </button>
+                                <a th:href="@{/answers/{id}/edit(id=${answer.id})}" 
+                                   class="btn btn-sm btn-outline-primary"
+                                   th:if="${answer.author.username == #authentication.name or #authorization.expression('hasRole(\'ADMIN\')')}">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                                <form th:action="@{/answers/{id}/delete(id=${answer.id})}" 
+                                      method="post"
+                                      th:if="${answer.author.username == #authentication.name or #authorization.expression('hasRole(\'ADMIN\')')}"
+                                      onsubmit="return confirm('Delete this answer?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Author Card -->
+                            <div class="card" style="width: 200px;">
+                                <div class="card-body p-2">
+                                    <small class="text-muted d-block">answered <span th:text="${#temporals.format(answer.createdAt, 'MMM dd')}">date</span></small>
+                                    <div class="d-flex align-items-center mt-2">
+                                        <img th:src="${answer.author.profileImage != null ? answer.author.profileImage : 'https://via.placeholder.com/32'}" 
+                                             class="rounded me-2" width="32" height="32" alt="avatar">
+                                        <div>
+                                            <a th:href="@{/users/{id}(id=${answer.author.id})}" 
+                                               class="text-decoration-none fw-bold"
+                                               th:text="${answer.author.username}">username</a>
+                                            <div class="small">
+                                                <span class="user-reputation" th:text="${answer.author.reputation}">0</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Answer Comments -->
+                        <div class="border-top pt-3">
+                            <div th:each="comment : ${answer.comments}" class="comment-item">
+                                <span class="comment-text" th:text="${comment.body}">Comment</span>
+                                – <a th:href="@{/users/{id}(id=${comment.author.id})}" th:text="${comment.author.username}">user</a>
+                                <span class="comment-meta" th:text="${#temporals.format(comment.createdAt, 'MMM dd')}">date</span>
+                            </div>
+                            
+                            <!-- Add Comment -->
+                            <div class="mt-3" sec:authorize="isAuthenticated()">
+                                <form th:action="@{/answers/{id}/comments(id=${answer.id})}" method="post">
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" name="body" class="form-control" placeholder="Add a comment..." required>
+                                        <button type="submit" class="btn btn-outline-primary">
+                                            <i class="bi bi-send"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Your Answer Section -->
+    <div class="card" th:unless="${question.isLocked}" sec:authorize="isAuthenticated()">
+        <div class="card-header bg-light">
+            <h4 class="mb-0">
+                <i class="bi bi-chat-left-text"></i> Your Answer
+            </h4>
+        </div>
+        <div class="card-body">
+            <form th:action="@{/questions/{id}/answers(id=${question.id})}" method="post">
+                <div class="mb-3">
+                    <textarea name="body" class="form-control markdown-editor" rows="10" 
+                              placeholder="Write your answer here... (Markdown supported)" required minlength="30"></textarea>
+                    <div class="form-text">
+                        <i class="bi bi-info-circle"></i> Minimum 30 characters. You can use Markdown for formatting.
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-send"></i> Post Your Answer
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Locked Message -->
+    <div class="alert alert-warning" th:if="${question.isLocked}">
+        <i class="bi bi-lock-fill"></i> <strong>This question is locked.</strong> 
+        No new answers or comments can be added at this time.
+    </div>
+
+    <!-- Login to Answer -->
+    <div class="card" sec:authorize="!isAuthenticated()">
+        <div class="card-body text-center py-4">
+            <i class="bi bi-person-circle display-4 text-muted"></i>
+            <h5 class="mt-3">Want to answer this question?</h5>
+            <p class="text-muted">Log in to post your answer</p>
+            <a th:href="@{/login}" class="btn btn-primary">
+                <i class="bi bi-box-arrow-in-right"></i> Log in
+            </a>
+            <a th:href="@{/register}" class="btn btn-outline-primary ms-2">
+                Sign up
+            </a>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div class="modal fade" id="shareModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-share"></i> Share this question</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group">
+                        <input type="text" class="form-control" th:value="${'http://localhost:8080/questions/' + question.id}" id="shareUrl" readonly>
+                        <button class="btn btn-outline-primary" type="button" onclick="copyToClipboard()">
+                            <i class="bi bi-clipboard"></i> Copy
+                        </button>
+                    </div>
+                    <div class="mt-3 d-flex gap-2">
+                        <a href="#" class="btn btn-outline-primary"><i class="bi bi-facebook"></i> Facebook</a>
+                        <a href="#" class="btn btn-outline-info"><i class="bi bi-twitter"></i> Twitter</a>
+                        <a href="#" class="btn btn-outline-success"><i class="bi bi-whatsapp"></i> WhatsApp</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="extra-scripts">
+<script>
+function copyToClipboard() {
+    const input = document.getElementById('shareUrl');
+    input.select();
+    document.execCommand('copy');
+    alert('Link copied to clipboard!');
+}
+
+// Initialize tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+  return new bootstrap.Tooltip(tooltipTriggerEl)
+})
+</script>
+</th:block>
+</body>
+</html>
+

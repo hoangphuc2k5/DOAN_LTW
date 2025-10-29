@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="vi" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head><title th:text="${pageTitle}">Cài Đặt Hệ Thống</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-2 d-md-block bg-light sidebar">
+                <div th:replace="~{admin/sidebar :: sidebar}"></div>
+            </nav>
+
+            <main class="col-md-10 ms-sm-auto px-md-4">
+                <h1 class="h2 pt-3"><i class="bi bi-gear"></i> Cài Đặt Hệ Thống</h1>
+
+                <!-- Alerts -->
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show">
+                    <span th:text="${successMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                
+                <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show">
+                    <span th:text="${errorMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <!-- Logo & Branding -->
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-dark text-white">
+                        <h5><i class="bi bi-image"></i> Logo & Thương Hiệu</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Logo Hệ Thống:</label>
+                                <div th:if="${settings.logoPath}" class="mb-2">
+                                    <img th:src="${settings.logoPath}" alt="Current Logo" style="max-height: 100px;" class="img-thumbnail">
+                                </div>
+                                <form th:action="@{/admin/system/upload-logo}" method="post" enctype="multipart/form-data">
+                                    <div class="input-group">
+                                        <input type="file" class="form-control" name="logoFile" accept="image/*" required>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-upload"></i> Tải Lên
+                                        </button>
+                                    </div>
+                                    <small class="text-muted">PNG, JPG hoặc GIF (Tối đa 2MB)</small>
+                                </form>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Favicon:</label>
+                                <div th:if="${settings.faviconPath}" class="mb-2">
+                                    <img th:src="${settings.faviconPath}" alt="Current Favicon" style="max-height: 50px;" class="img-thumbnail">
+                                </div>
+                                <form th:action="@{/admin/system/upload-favicon}" method="post" enctype="multipart/form-data">
+                                    <div class="input-group">
+                                        <input type="file" class="form-control" name="faviconFile" accept="image/*" required>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-upload"></i> Tải Lên
+                                        </button>
+                                    </div>
+                                    <small class="text-muted">ICO hoặc PNG 32x32px</small>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Theme Colors -->
+                <div class="card shadow mb-4">
+                    <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                        <h5><i class="bi bi-palette"></i> Màu Giao Diện</h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/admin/system/update-theme}" method="post">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">Màu Chính (Primary):</label>
+                                    <input type="color" class="form-control form-control-color" name="primaryColor" th:value="${settings.primaryColor}" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">Màu Phụ (Secondary):</label>
+                                    <input type="color" class="form-control form-control-color" name="secondaryColor" th:value="${settings.secondaryColor}" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">Màu Nhấn (Accent):</label>
+                                    <input type="color" class="form-control form-control-color" name="accentColor" th:value="${settings.accentColor}" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-palette"></i> Cập Nhật Màu Sắc
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <form th:action="@{/admin/system/settings/update}" method="post" th:object="${settings}">
+                    <input type="hidden" th:field="*{id}">
+
+                    <!-- General Settings -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5><i class="bi bi-info-circle"></i> Cài Đặt Chung</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Tên Website:</label>
+                                    <input type="text" class="form-control" th:field="*{siteName}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Email Liên Hệ:</label>
+                                    <input type="email" class="form-control" th:field="*{contactEmail}">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Mô Tả Website:</label>
+                                <textarea class="form-control" rows="3" th:field="*{siteDescription}"></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Ngôn Ngữ:</label>
+                                    <select class="form-select" th:field="*{language}">
+                                        <option value="en">English</option>
+                                        <option value="vi">Tiếng Việt</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Giao Diện:</label>
+                                    <select class="form-select" th:field="*{theme}">
+                                        <option value="light">Sáng</option>
+                                        <option value="dark">Tối</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Features -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5><i class="bi bi-toggles"></i> Tính Năng Hệ Thống</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" th:field="*{enableRegistration}" id="enableReg">
+                                <label class="form-check-label" for="enableReg">Cho Phép Đăng Ký Người Dùng Mới</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" th:field="*{enableComments}" id="enableCmt">
+                                <label class="form-check-label" for="enableCmt">Cho Phép Bình Luận</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" th:field="*{requireEmailVerification}" id="reqEmail">
+                                <label class="form-check-label" for="reqEmail">Yêu Cầu Xác Minh Email</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" th:field="*{requireModeration}" id="reqMod">
+                                <label class="form-check-label" for="reqMod">Yêu Cầu Kiểm Duyệt Nội Dung</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Points System -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header bg-warning text-white">
+                            <h5><i class="bi bi-star"></i> Hệ Thống Điểm</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">Điểm Mỗi Câu Hỏi:</label>
+                                    <input type="number" class="form-control" th:field="*{pointsPerQuestion}">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">Điểm Mỗi Câu Trả Lời:</label>
+                                    <input type="number" class="form-control" th:field="*{pointsPerAnswer}">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-bold">Điểm Câu Trả Lời Được Chấp Nhận:</label>
+                                    <input type="number" class="form-control" th:field="*{pointsPerAcceptedAnswer}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-save"></i> Lưu Tất Cả Cài Đặt
+                    </button>
+                </form>
+            </main>
+        </div>
+    </div>
+    <style>
+        .sidebar {
+            position: fixed;
+            top: 56px;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            padding: 48px 0 0;
+            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+        }
+    </style>
+</div>
+</body>
+</html>
+

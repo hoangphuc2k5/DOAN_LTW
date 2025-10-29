@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Bình Luận - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+                <div th:replace="~{admin/sidebar :: sidebar}"></div>
+            </nav>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2"><i class="bi bi-chat-left-text"></i> Quản Lý Bình Luận</h1>
+                </div>
+
+                <!-- Search -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <form th:action="@{/admin/comments}" method="get" class="row g-3">
+                            <div class="col-md-10">
+                                <input type="text" name="search" class="form-control" placeholder="Tìm kiếm bình luận..." th:value="${search}">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-search"></i> Tìm
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Comments Table -->
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="m-0"><i class="bi bi-list"></i> Danh Sách Bình Luận</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nội Dung</th>
+                                        <th>Tác Giả</th>
+                                        <th>Câu Hỏi</th>
+                                        <th>Trạng Thái</th>
+                                        <th>Tạo Lúc</th>
+                                        <th>Thao Tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="comment : ${comments}">
+                                        <td th:text="${comment.id}">1</td>
+                                        <td>
+                                            <div th:text="${#strings.abbreviate(comment.body, 100)}">Comment text...</div>
+                                        </td>
+                                        <td th:text="${comment.author.username}">Author</td>
+                                        <td>
+                                            <a th:href="@{/questions/{id}(id=${comment.question.id})}" target="_blank" th:text="${#strings.abbreviate(comment.question.title, 50)}">Question</a>
+                                        </td>
+                                        <td>
+                                            <span th:if="${comment.isApproved}" class="badge bg-success">Đã Duyệt</span>
+                                            <span th:unless="${comment.isApproved}" class="badge bg-warning">Chờ Duyệt</span>
+                                            <span th:if="${comment.isDeleted}" class="badge bg-danger ms-2">Đã Xóa</span>
+                                        </td>
+                                        <td th:text="${#temporals.format(comment.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <form th:if="${!comment.isApproved}" th:action="@{/admin/comments/{id}/approve(id=${comment.id})}" method="post" style="display:inline;">
+                                                    <button type="submit" class="btn btn-outline-success" title="Duyệt">
+                                                        <i class="bi bi-check"></i>
+                                                    </button>
+                                                </form>
+                                                <form th:if="${!comment.isDeleted}" th:action="@{/admin/comments/{id}/delete(id=${comment.id})}" method="post" style="display:inline;" onsubmit="return confirm('Xóa bình luận này?')">
+                                                    <button type="submit" class="btn btn-outline-danger" title="Xóa">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                                <form th:if="${comment.isDeleted}" th:action="@{/admin/comments/{id}/permanent-delete(id=${comment.id})}" method="post" style="display:inline;" onsubmit="return confirm('XÓA VĨNHViễn?')">
+                                                    <button type="submit" class="btn btn-outline-danger" title="Xóa Vĩnh Viễn">
+                                                        <i class="bi bi-trash-fill"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(comments)}">
+                                        <td colspan="7" class="text-center">Không có bình luận nào</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        <nav th:if="${totalPages > 1}">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/admin/comments(page=${currentPage - 1}, search=${search})}">Trước</a>
+                                </li>
+                                <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" th:classappend="${i == currentPage} ? 'active'">
+                                    <a class="page-link" th:href="@{/admin/comments(page=${i}, search=${search})}" th:text="${i + 1}">1</a>
+                                </li>
+                                <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/admin/comments(page=${currentPage + 1}, search=${search})}">Sau</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

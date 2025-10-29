@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Manager Dashboard</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1">
+                <i class="bi bi-kanban text-warning"></i> Manager Dashboard
+            </h1>
+            <p class="text-muted mb-0">Welcome, <span sec:authentication="name">Manager</span></p>
+        </div>
+        <div>
+            <button class="btn btn-outline-primary" onclick="location.reload()">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Alert for pending tasks -->
+    <div class="alert alert-warning alert-dismissible fade show" th:if="${pendingPosts > 0 or pendingComments > 0}">
+        <i class="bi bi-exclamation-triangle"></i>
+        <strong>Tasks Pending!</strong>
+        <span th:if="${pendingPosts > 0}">
+            <span th:text="${pendingPosts}">0</span> posts need approval
+        </span>
+        <span th:if="${pendingComments > 0}">
+            and <span th:text="${pendingComments}">0</span> comments need review
+        </span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Assigned Categories -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card admin-card card-primary h-100 hover-shadow">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-2">My Categories</h6>
+                            <h2 class="mb-0" th:text="${assignedCategories}">0</h2>
+                            <small>Categories I manage</small>
+                        </div>
+                        <div>
+                            <i class="bi bi-folder display-4 opacity-50"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a th:href="@{/manager/categories}" class="text-white text-decoration-none">
+                            Manage <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Posts -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card admin-card card-warning h-100 hover-shadow">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-2">Pending Posts</h6>
+                            <h2 class="mb-0" th:text="${pendingPosts}">0</h2>
+                            <small>Need approval</small>
+                        </div>
+                        <div>
+                            <i class="bi bi-hourglass-split display-4 opacity-50"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a th:href="@{/manager/moderation/posts}" class="text-white text-decoration-none">
+                            Review <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Comments -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card admin-card card-success h-100 hover-shadow">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-2">Pending Comments</h6>
+                            <h2 class="mb-0" th:text="${pendingComments}">0</h2>
+                            <small>Need review</small>
+                        </div>
+                        <div>
+                            <i class="bi bi-chat display-4 opacity-50"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a th:href="@{/manager/moderation/comments}" class="text-white text-decoration-none">
+                            Review <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Members Monitored -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card admin-card card-danger h-100 hover-shadow">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-white-50 mb-2">Active Members</h6>
+                            <h2 class="mb-0" th:text="${activeMembers}">0</h2>
+                            <small>In my categories</small>
+                        </div>
+                        <div>
+                            <i class="bi bi-people display-4 opacity-50"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a th:href="@{/manager/members}" class="text-white text-decoration-none">
+                            View <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Quick Actions -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightning-charge"></i> Manager Actions
+                    </h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a th:href="@{/manager/moderation/posts}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-check-circle text-warning"></i> Approve/Reject Posts
+                        <span class="badge bg-warning float-end" th:text="${pendingPosts}">0</span>
+                    </a>
+                    <a th:href="@{/manager/moderation/comments}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-chat-square-text text-success"></i> Review Comments
+                        <span class="badge bg-success float-end" th:text="${pendingComments}">0</span>
+                    </a>
+                    <a th:href="@{/manager/categories}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-folder text-primary"></i> Manage My Categories
+                        <span class="badge bg-primary float-end" th:text="${assignedCategories}">0</span>
+                    </a>
+                    <a th:href="@{/manager/members}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-people text-info"></i> Monitor Members
+                        <span class="badge bg-info float-end" th:text="${activeMembers}">0</span>
+                    </a>
+                    <a th:href="@{/manager/violations}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-flag text-danger"></i> Handle Violations
+                        <span class="badge bg-danger float-end">0</span>
+                    </a>
+                    <a th:href="@{/manager/statistics}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-graph-up text-secondary"></i> View Statistics
+                    </a>
+                    <a th:href="@{/manager/notifications/send}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-bell text-primary"></i> Send Notification
+                    </a>
+                    <a th:href="@{/manager/posts/pin}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-pin-angle text-warning"></i> Pin Important Posts
+                    </a>
+                    <a th:href="@{/manager/events}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-calendar-event text-success"></i> Create Forum Event
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-activity"></i> Recent Activity in My Categories
+                    </h5>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    <div th:if="${recentActivities == null or recentActivities.isEmpty()}" class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox display-4"></i>
+                        <p class="mt-3">No recent activity</p>
+                    </div>
+
+                    <div class="timeline" th:if="${recentActivities != null}">
+                        <div th:each="activity : ${recentActivities}" class="timeline-item mb-3 pb-3 border-bottom">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0 me-3">
+                                    <span class="badge rounded-pill bg-primary">
+                                        <i class="bi bi-person"></i>
+                                    </span>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <p class="mb-1">
+                                        <strong th:text="${activity.user != null ? activity.user.username : 'User'}">User</strong>
+                                        <span class="text-muted" th:text="${activity.action}">action</span>
+                                    </p>
+                                    <small class="text-muted">
+                                        <i class="bi bi-clock"></i>
+                                        <span th:text="${#temporals.format(activity.createdAt, 'MMM dd, yyyy HH:mm')}">date</span>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Items Section -->
+    <div class="row g-4 mt-2">
+        <!-- Pending Posts -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-warning d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-dark">
+                        <i class="bi bi-hourglass-split"></i> Posts Awaiting Approval
+                    </h5>
+                    <a th:href="@{/manager/moderation/posts}" class="btn btn-sm btn-dark">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div th:if="${pendingPostsList == null or pendingPostsList.isEmpty()}" class="text-center py-4 text-muted">
+                        <i class="bi bi-check-circle display-4 text-success"></i>
+                        <p class="mt-3">All posts approved!</p>
+                    </div>
+
+                    <div class="list-group list-group-flush" th:if="${pendingPostsList != null}">
+                        <div th:each="post : ${pendingPostsList}" class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1" th:text="${post.title}">Post title</h6>
+                                    <small class="text-muted">
+                                        by <span th:text="${post.author.username}">user</span> 
+                                        • <span th:text="${#temporals.format(post.createdAt, 'MMM dd')}">date</span>
+                                    </small>
+                                </div>
+                                <div class="btn-group btn-group-sm">
+                                    <form th:action="@{/manager/posts/{id}/approve(id=${post.id})}" method="post">
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            <i class="bi bi-check-lg"></i> Approve
+                                        </button>
+                                    </form>
+                                    <form th:action="@{/manager/posts/{id}/reject(id=${post.id})}" method="post" class="ms-1">
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="bi bi-x-lg"></i> Reject
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Comments -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-chat"></i> Comments Awaiting Review
+                    </h5>
+                    <a th:href="@{/manager/moderation/comments}" class="btn btn-sm btn-light">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div th:if="${pendingCommentsList == null or pendingCommentsList.isEmpty()}" class="text-center py-4 text-muted">
+                        <i class="bi bi-check-circle display-4 text-success"></i>
+                        <p class="mt-3">All comments reviewed!</p>
+                    </div>
+
+                    <div class="list-group list-group-flush" th:if="${pendingCommentsList != null}">
+                        <div th:each="comment : ${pendingCommentsList}" class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <p class="mb-1" th:text="${#strings.abbreviate(comment.body, 100)}">Comment text...</p>
+                                    <small class="text-muted">
+                                        by <span th:text="${comment.author.username}">user</span> 
+                                        • <span th:text="${#temporals.format(comment.createdAt, 'MMM dd')}">date</span>
+                                    </small>
+                                </div>
+                                <div class="btn-group btn-group-sm">
+                                    <form th:action="@{/manager/comments/{id}/approve(id=${comment.id})}" method="post">
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            <i class="bi bi-check"></i>
+                                        </button>
+                                    </form>
+                                    <form th:action="@{/manager/comments/{id}/reject(id=${comment.id})}" method="post" class="ms-1">
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

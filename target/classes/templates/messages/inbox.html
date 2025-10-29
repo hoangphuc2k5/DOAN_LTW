@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Messages</title>
+    <style>
+        .message-container {
+            height: calc(100vh - 250px);
+            min-height: 500px;
+        }
+        .conversations-list {
+            height: 100%;
+            overflow-y: auto;
+            border-right: 1px solid #dee2e6;
+        }
+        .conversation-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .conversation-item:hover {
+            background: #f8f9fa;
+        }
+        .conversation-item.active {
+            background: #e7f3ff;
+            border-left: 3px solid #0a95ff;
+        }
+        .conversation-item.unread {
+            background: #f0f8ff;
+            font-weight: 600;
+        }
+        .messages-panel {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .messages-header {
+            padding: 15px;
+            border-bottom: 2px solid #dee2e6;
+            background: white;
+        }
+        .messages-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .message-bubble {
+            max-width: 70%;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 18px;
+            position: relative;
+        }
+        .message-bubble.sent {
+            background: #0a95ff;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+        .message-bubble.received {
+            background: white;
+            border: 1px solid #dee2e6;
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+        .message-time {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+        .messages-footer {
+            padding: 15px;
+            border-top: 2px solid #dee2e6;
+            background: white;
+        }
+        .empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="card message-container">
+        <div class="row g-0 h-100">
+            <!-- Conversations List -->
+            <div class="col-md-4 conversations-list">
+                <!-- Header -->
+                <div class="p-3 border-bottom bg-white sticky-top">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-envelope"></i> Messages
+                        </h5>
+                        <a th:href="@{/messages/compose}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-circle"></i> New
+                        </a>
+                    </div>
+                    
+                    <!-- Search -->
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control" placeholder="Search messages..." id="searchMessages">
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <ul class="nav nav-tabs px-3 pt-2 bg-white">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" data-filter="inbox">
+                            <i class="bi bi-inbox"></i> Inbox
+                            <span class="badge bg-primary ms-1" th:text="${unreadCount}">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-filter="sent">
+                            <i class="bi bi-send"></i> Sent
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Conversations -->
+                <div class="conversations-list-body">
+                    <!-- Empty State -->
+                    <div th:if="${messages.isEmpty()}" class="text-center py-5">
+                        <i class="bi bi-inbox display-4 text-muted"></i>
+                        <p class="mt-3 text-muted">Chưa có tin nhắn nào</p>
+                        <a th:href="@{/messages/compose}" class="btn btn-sm btn-primary">
+                            Gửi tin nhắn
+                        </a>
+                    </div>
+
+                    <!-- Message Items -->
+                    <div th:each="message : ${messages.content}" 
+                         class="conversation-item" 
+                         th:classappend="${!message.isRead} ? 'unread' : ''"
+                         th:attr="data-message-id=${message.id}">
+                        <a th:href="@{/messages/{id}(id=${message.id})}" class="text-decoration-none text-dark d-block">
+                            <div class="d-flex">
+                                <img th:src="${message.sender.profileImage != null ? message.sender.profileImage : 'https://ui-avatars.com/api/?name=' + message.sender.username}" 
+                                     class="rounded-circle me-3" 
+                                     width="40" 
+                                     height="40" 
+                                     alt="avatar">
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <h6 class="mb-0" th:text="${message.sender.username}">Username</h6>
+                                        <small class="text-muted" th:text="${#temporals.format(message.createdAt, 'dd/MM HH:mm')}">date</small>
+                                    </div>
+                                    <p class="mb-0 text-muted small text-truncate" th:text="${message.subject}">
+                                    Nội dung tin nhắn...
+                                </p>
+                                <div th:if="${!message.isRead}" class="ms-2">
+                                    <span class="badge bg-primary rounded-pill">•</span>
+                                </div>
+                            </div>
+                        </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages Panel -->
+            <div class="col-md-8 messages-panel">
+                <!-- Empty State (No conversation selected) -->
+                <div class="empty-state" id="emptyState">
+                    <i class="bi bi-chat-left-text display-1 text-muted"></i>
+                    <h4 class="mt-3 text-muted">Select a conversation</h4>
+                    <p class="text-muted">Choose a conversation from the left to start messaging</p>
+                    <a th:href="@{/messages/compose}" class="btn btn-primary mt-3">
+                        <i class="bi bi-plus-circle"></i> Start New Conversation
+                    </a>
+                </div>
+
+                <!-- Active Conversation (Hidden by default) -->
+                <div id="activeConversation" style="display: none; height: 100%; display: flex; flex-direction: column;">
+                    <!-- Header -->
+                    <div class="messages-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <img id="conversationAvatar" 
+                                     src="https://via.placeholder.com/40" 
+                                     class="rounded-circle me-3" 
+                                     width="40" 
+                                     height="40" 
+                                     alt="avatar">
+                                <div>
+                                    <h6 class="mb-0" id="conversationUsername">Username</h6>
+                                    <small class="text-muted">
+                                        <span class="online-status"></span> Online
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="View Profile">
+                                    <i class="bi bi-person"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Search in conversation">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" data-bs-toggle="tooltip" title="Delete conversation">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Messages Body -->
+                    <div class="messages-body" id="messagesBody">
+                        <!-- Messages will be loaded here via JavaScript or server -->
+                        <div class="text-center">
+                            <small class="text-muted">Today</small>
+                        </div>
+
+                        <!-- Example messages (will be replaced with actual data) -->
+                        <div class="message-bubble received">
+                            <div>Hello! How can I help you with your coding question?</div>
+                            <div class="message-time">10:30 AM</div>
+                        </div>
+
+                        <div class="message-bubble sent">
+                            <div>Hi! I'm having trouble with Spring Boot JPA.</div>
+                            <div class="message-time">10:32 AM</div>
+                        </div>
+
+                        <div class="message-bubble received">
+                            <div>Sure! What's the specific issue you're facing?</div>
+                            <div class="message-time">10:33 AM</div>
+                        </div>
+
+                        <div class="message-bubble sent">
+                            <div>I'm getting a LazyInitializationException when trying to access a collection.</div>
+                            <div class="message-time">10:35 AM</div>
+                        </div>
+                    </div>
+
+                    <!-- Message Input -->
+                    <div class="messages-footer">
+                        <form th:action="@{/messages/send}" method="post" id="messageForm">
+                            <input type="hidden" name="receiverId" id="receiverId">
+                            <div class="input-group">
+                                <button class="btn btn-outline-secondary" type="button" data-bs-toggle="tooltip" title="Attach file">
+                                    <i class="bi bi-paperclip"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary" type="button" data-bs-toggle="tooltip" title="Emoji">
+                                    <i class="bi bi-emoji-smile"></i>
+                                </button>
+                                <input type="text" 
+                                       class="form-control" 
+                                       name="body" 
+                                       id="messageInput"
+                                       placeholder="Type a message..." 
+                                       required
+                                       autocomplete="off">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-send"></i> Send
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="extra-scripts">
+<script>
+function loadConversation(conversationId) {
+    // Remove active class from all conversations
+    document.querySelectorAll('.conversation-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    // Add active class to clicked conversation
+    event.currentTarget.classList.add('active');
+    
+    // Hide empty state, show active conversation
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('activeConversation').style.display = 'flex';
+    
+    // TODO: Load messages via AJAX
+    // For now, just update the header
+    const username = event.currentTarget.querySelector('h6').textContent;
+    const avatar = event.currentTarget.querySelector('img').src;
+    
+    document.getElementById('conversationUsername').textContent = username;
+    document.getElementById('conversationAvatar').src = avatar;
+    
+    // Scroll to bottom
+    const messagesBody = document.getElementById('messagesBody');
+    messagesBody.scrollTop = messagesBody.scrollHeight;
+    
+    // Mark as read
+    event.currentTarget.classList.remove('unread');
+}
+
+// Message form submission
+document.getElementById('messageForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const input = document.getElementById('messageInput');
+    const message = input.value.trim();
+    
+    if (message) {
+        // TODO: Send via AJAX
+        
+        // Add message to UI (temporary)
+        const messagesBody = document.getElementById('messagesBody');
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble sent';
+        bubble.innerHTML = `
+            <div>${message}</div>
+            <div class="message-time">${new Date().toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}</div>
+        `;
+        messagesBody.appendChild(bubble);
+        
+        // Clear input
+        input.value = '';
+        
+        // Scroll to bottom
+        messagesBody.scrollTop = messagesBody.scrollHeight;
+    }
+});
+
+// Search messages
+document.getElementById('searchMessages').addEventListener('input', function(e) {
+    const query = e.target.value.toLowerCase();
+    document.querySelectorAll('.conversation-item').forEach(item => {
+        const username = item.querySelector('h6').textContent.toLowerCase();
+        const message = item.querySelector('p').textContent.toLowerCase();
+        
+        if (username.includes(query) || message.includes(query)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+});
+
+// Enter key to send
+document.getElementById('messageInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById('messageForm').dispatchEvent(new Event('submit'));
+    }
+});
+
+// Initialize tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+  return new bootstrap.Tooltip(tooltipTriggerEl)
+});
+</script>
+</th:block>
+</body>
+</html>
