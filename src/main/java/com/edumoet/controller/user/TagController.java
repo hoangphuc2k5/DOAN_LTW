@@ -49,7 +49,7 @@ public class TagController {
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", tags.getTotalPages());
         model.addAttribute("sort", sort);
-        model.addAttribute("pageTitle", "Tags - Stack Overflow Clone");
+        model.addAttribute("pageTitle", "Tags - EDUMOET");
         
         return "tags/list";
     }
@@ -71,7 +71,7 @@ public class TagController {
         model.addAttribute("questions", questions);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", questions.getTotalPages());
-        model.addAttribute("pageTitle", "'" + tag.getName() + "' Questions - Stack Overflow Clone");
+        model.addAttribute("pageTitle", "'" + tag.getName() + "' Questions - EDUMOET");
         
         return "tags/view";
     }

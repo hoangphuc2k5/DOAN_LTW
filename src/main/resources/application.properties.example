@@ -3,9 +3,9 @@ server.port=8080
 spring.application.name=edumoet
 
 # ========== Database (SQL Server) ==========
-spring.datasource.url=jdbc:sqlserver://localhost:1433;databaseName=LTW;encrypt=true;trustServerCertificate=true;characterEncoding=UTF-8;sendStringParametersAsUnicode=true
-spring.datasource.username=sa
-spring.datasource.password=123
+spring.datasource.url=jdbc:sqlserver://localhost:1433;databaseName=YOUR_DATABASE_NAME;encrypt=true;trustServerCertificate=true;characterEncoding=UTF-8;sendStringParametersAsUnicode=true
+spring.datasource.username=YOUR_USERNAME
+spring.datasource.password=YOUR_PASSWORD
 spring.datasource.driver-class-name=com.microsoft.sqlserver.jdbc.SQLServerDriver
 
 # ========== JPA / Hibernate ==========
@@ -29,7 +29,7 @@ server.servlet.encoding.force=true
 spring.messages.encoding=UTF-8
 
 # ========== JWT ==========
-jwt.secret=5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437
+jwt.secret=YOUR_JWT_SECRET_KEY_HERE
 jwt.expiration=86400000
 
 # ========== Logging ==========
@@ -59,15 +59,25 @@ spring.session.timeout=86400
 # Configure these with your SMTP server details
 spring.mail.host=smtp.gmail.com
 spring.mail.port=587
-spring.mail.username=ichigo01102005@gmail.com
-spring.mail.password=rnlrteqdsxjieujh
+spring.mail.username=YOUR_EMAIL@gmail.com
+spring.mail.password=YOUR_APP_PASSWORD
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
 spring.mail.properties.mail.smtp.starttls.required=true
-#
-#
-#
-#
-#
 
+# ========== Chatbot Configuration (OPTIONAL) ==========
+# Enable/disable OpenAI integration (default: false, uses pattern matching)
+chatbot.openai.enabled=false
+# OpenAI API Key (optional - only if you want to use ChatGPT)
+chatbot.openai.api-key=YOUR_OPENAI_API_KEY_HERE
+# OpenAI Model: gpt-3.5-turbo (faster, cheaper) or gpt-4 (smarter, more expensive)
+chatbot.openai.model=gpt-4o-mini
+# Maximum tokens in response (100-1000, lower = cheaper)
+chatbot.openai.max-tokens=500
+# Temperature (0.0-1.0, higher = more creative)
+chatbot.openai.temperature=0.7
+# Chatbot name
+chatbot.name=EDUMOET Bot
+# Auto-close inactive conversations after (hours)
+chatbot.conversation.auto-close-after=24
 

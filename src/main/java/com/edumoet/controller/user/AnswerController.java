@@ -98,7 +98,7 @@ public class AnswerController {
         }
         
         model.addAttribute("answer", answer);
-        model.addAttribute("pageTitle", "Edit Answer - Stack Overflow Clone");
+        model.addAttribute("pageTitle", "Edit Answer - EDUMOET");
         return "answer/edit";
     }
 

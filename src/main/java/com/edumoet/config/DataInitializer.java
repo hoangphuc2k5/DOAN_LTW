@@ -46,28 +46,28 @@ public class DataInitializer implements CommandLineRunner {
         // Tạo users mẫu
         User admin = new User();
         admin.setUsername("admin");
-        admin.setEmail("admin@stackoverflow.com");
+        admin.setEmail("admin@edumoet.vn");
         admin.setPassword(passwordEncoder.encode("admin123"));
         admin.setRole("ADMIN");
         admin.setReputation(1000);
         admin.setAbout("System Administrator");
-        admin.setBio("Managing the StackOverflow platform");
+        admin.setBio("Managing the EDUMOET platform");
         admin.setLocation("Vietnam");
-        admin.setWebsite("https://stackoverflow.com");
+        admin.setWebsite("https://edumoet.vn");
         admin.setGithubUrl("https://github.com/admin");
         admin.setLinkedinUrl("https://linkedin.com/in/admin");
         userRepository.save(admin);
 
         User manager = new User();
         manager.setUsername("manager");
-        manager.setEmail("manager@stackoverflow.com");
+        manager.setEmail("manager@edumoet.vn");
         manager.setPassword(passwordEncoder.encode("manager123"));
         manager.setRole("MANAGER");
         manager.setReputation(500);
         manager.setAbout("Content Manager");
         manager.setBio("Managing questions, answers and reports");
         manager.setLocation("Vietnam");
-        manager.setWebsite("https://stackoverflow.com");
+        manager.setWebsite("https://edumoet.vn");
         manager.setGithubUrl("https://github.com/manager");
         manager.setLinkedinUrl("https://linkedin.com/in/manager");
         userRepository.save(manager);

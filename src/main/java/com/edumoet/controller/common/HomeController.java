@@ -55,7 +55,7 @@ public class HomeController {
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", questions.getTotalPages());
         model.addAttribute("sort", sort);
-        model.addAttribute("pageTitle", "Top Questions - Stack Overflow Clone");
+        model.addAttribute("pageTitle", "Top Questions - EDUMOET");
         
         return "home";
     }
@@ -74,7 +74,7 @@ public class HomeController {
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", questions.getTotalPages());
         model.addAttribute("searchQuery", q);
-        model.addAttribute("pageTitle", "Search Results - Stack Overflow Clone");
+        model.addAttribute("pageTitle", "Search Results - EDUMOET");
         
         return "search";
     }

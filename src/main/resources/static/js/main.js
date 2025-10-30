@@ -1,4 +1,4 @@
-// Stack Overflow Clone - Main JavaScript
+// EDUMOET - Main JavaScript
 
 document.addEventListener('DOMContentLoaded', function() {
     // Vote buttons handler

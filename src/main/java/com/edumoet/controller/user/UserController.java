@@ -54,7 +54,7 @@ public class UserController {
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", users.getTotalPages());
         model.addAttribute("sort", sort);
-        model.addAttribute("pageTitle", "Users - Stack Overflow Clone");
+        model.addAttribute("pageTitle", "Users - EDUMOET");
         
         return "users/list";
     }

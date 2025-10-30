@@ -340,7 +340,7 @@ public class ProfileController {
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", questions.getTotalPages());
         model.addAttribute("filter", filter);
-        model.addAttribute("pageTitle", "My Questions - Stack Overflow Clone");
+        model.addAttribute("pageTitle", "My Questions - EDUMOET");
         
         return "profile/my-questions";
     }

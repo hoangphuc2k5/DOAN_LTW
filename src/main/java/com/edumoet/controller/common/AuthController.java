@@ -34,14 +34,14 @@ public class AuthController {
         if (error != null) {
             model.addAttribute("error", "Invalid username or password");
         }
-        model.addAttribute("pageTitle", "Log In - Stack Overflow Clone");
+        model.addAttribute("pageTitle", "Log In - EDUMOET");
         return "auth/login";
     }
 
     @GetMapping("/register")
     public String registerForm(Model model) {
         model.addAttribute("user", new User());
-        model.addAttribute("pageTitle", "Sign Up - Stack Overflow Clone");
+        model.addAttribute("pageTitle", "Sign Up - EDUMOET");
         return "auth/register";
     }
 
@@ -52,7 +52,7 @@ public class AuthController {
             Model model) {
         
         if (result.hasErrors()) {
-            model.addAttribute("pageTitle", "Sign Up - Stack Overflow Clone");
+            model.addAttribute("pageTitle", "Sign Up - EDUMOET");
             return "auth/register";
         }
         
@@ -61,7 +61,7 @@ public class AuthController {
             return "redirect:/login?registered";
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
-            model.addAttribute("pageTitle", "Sign Up - Stack Overflow Clone");
+            model.addAttribute("pageTitle", "Sign Up - EDUMOET");
             return "auth/register";
         }
     }

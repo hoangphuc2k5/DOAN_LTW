@@ -77,7 +77,7 @@ public class OpenAIService {
             
             // System prompt - define chatbot personality in Vietnamese
             messages.add(new ChatMessage(ChatMessageRole.SYSTEM.value(), 
-                "Bạn là trợ lý ảo thông minh của EDUMOET - một nền tảng hỏi đáp về lập trình tương tự Stack Overflow. " +
+                "Bạn là trợ lý ảo thông minh của EDUMOET - một nền tảng hỏi đáp về lập trình. " +
                 "Nhiệm vụ của bạn là:\n" +
                 "1. Hướng dẫn người dùng cách sử dụng website (đặt câu hỏi, trả lời, vote, v.v.)\n" +
                 "2. Giải thích về hệ thống điểm reputation và huy hiệu (badges)\n" +

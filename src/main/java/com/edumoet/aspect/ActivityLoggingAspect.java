@@ -41,7 +41,7 @@ public class ActivityLoggingAspect {
      * Log tất cả các method trong AdminController
      */
     @AfterReturning(
-        pointcut = "execution(* com.stackoverflow.controller.admin..*(..))",
+        pointcut = "execution(* com.edumoet.controller.admin..*(..))",
         returning = "result"
     )
     public void logAdminActivity(JoinPoint joinPoint, Object result) {
@@ -56,7 +56,7 @@ public class ActivityLoggingAspect {
      * Log tất cả các method trong ManagerController
      */
     @AfterReturning(
-        pointcut = "execution(* com.stackoverflow.controller.manager..*(..))",
+        pointcut = "execution(* com.edumoet.controller.manager..*(..))",
         returning = "result"
     )
     public void logManagerActivity(JoinPoint joinPoint, Object result) {

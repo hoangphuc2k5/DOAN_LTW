@@ -47,7 +47,7 @@ public class QuestionController {
     @GetMapping("/ask")
     public String askQuestionForm(Model model) {
         model.addAttribute("question", new Question());
-        model.addAttribute("pageTitle", "Ask a Question - Stack Overflow Clone");
+        model.addAttribute("pageTitle", "Ask a Question - EDUMOET");
         return "question/ask";
     }
 
@@ -60,7 +60,7 @@ public class QuestionController {
             Model model) {
         
         if (result.hasErrors()) {
-            model.addAttribute("pageTitle", "Ask a Question - Stack Overflow Clone");
+            model.addAttribute("pageTitle", "Ask a Question - EDUMOET");
             return "question/ask";
         }
         
@@ -96,7 +96,7 @@ public class QuestionController {
             return "redirect:/questions/" + savedQuestion.getId();
         } catch (Exception e) {
             model.addAttribute("error", "Failed to create question: " + e.getMessage());
-            model.addAttribute("pageTitle", "Ask a Question - Stack Overflow Clone");
+            model.addAttribute("pageTitle", "Ask a Question - EDUMOET");
             return "question/ask";
         }
     }
@@ -196,7 +196,7 @@ public class QuestionController {
         model.addAttribute("answers", answers);
         model.addAttribute("hasUpvotedQuestion", hasUpvotedQuestion);
         model.addAttribute("upvotedAnswerIds", upvotedAnswerIds);
-        model.addAttribute("pageTitle", question.getTitle() + " - Stack Overflow Clone");
+        model.addAttribute("pageTitle", question.getTitle() + " - EDUMOET");
         
         return "question/view";
     }
@@ -214,7 +214,7 @@ public class QuestionController {
         }
         
         model.addAttribute("question", question);
-        model.addAttribute("pageTitle", "Edit Question - Stack Overflow Clone");
+        model.addAttribute("pageTitle", "Edit Question - EDUMOET");
         return "question/edit";
     }
 
@@ -231,7 +231,7 @@ public class QuestionController {
         
         try {
             if (result.hasErrors()) {
-                model.addAttribute("pageTitle", "Edit Question - Stack Overflow Clone");
+                model.addAttribute("pageTitle", "Edit Question - EDUMOET");
                 return "question/edit";
             }
             
