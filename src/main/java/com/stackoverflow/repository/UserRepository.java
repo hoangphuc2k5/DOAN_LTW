@@ -50,5 +50,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countByIsBanned(Boolean isBanned);
     
     long countByRole(String role);
+    
+    // For statistics - fetch users by reputation (no join fetch to avoid DISTINCT issue)
+    @Query("SELECT u FROM User u ORDER BY u.reputation DESC")
+    List<User> findTopUsersByReputation(Pageable pageable);
 }
 

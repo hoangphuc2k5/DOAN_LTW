@@ -131,7 +131,7 @@ public class ActivityLoggingAspect {
         String[] skipMethods = {
             "listUsers", "listQuestions", "listNotifications", "listActivityLogs",
             "showSendPage", "settings", "dashboard", "moderationDashboard",
-            "viewQuestion", "viewUser", "viewTag"
+            "viewQuestion", "viewUser", "viewTag", "statisticsDashboard"
         };
         
         for (String skip : skipMethods) {
@@ -238,7 +238,11 @@ public class ActivityLoggingAspect {
         if (className.contains("Comment")) return "COMMENT";
         if (className.contains("Notification")) return "NOTIFICATION";
         if (className.contains("Moderation")) return "MODERATION";
-        return null;
+        if (className.contains("Statistics")) return "STATISTICS";
+        if (className.contains("Dashboard")) return "DASHBOARD";
+        if (className.contains("ActivityLog")) return "ACTIVITY_LOG";
+        if (className.contains("Report")) return "REPORT";
+        return "SYSTEM";
     }
 
     /**

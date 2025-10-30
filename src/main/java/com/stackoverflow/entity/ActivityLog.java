@@ -33,7 +33,7 @@ public class ActivityLog {
     @Column(nullable = false)
     private String action; // CREATE_QUESTION, POST_ANSWER, VOTE, LOGIN, ADMIN_ACTION, etc.
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String entityType; // QUESTION, ANSWER, COMMENT, USER, SYSTEM
 
     private Long entityId;

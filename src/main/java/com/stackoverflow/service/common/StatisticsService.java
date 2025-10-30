@@ -160,8 +160,23 @@ public class StatisticsService {
      * Top users by reputation
      */
     public List<User> getTopUsers(int limit) {
-        Pageable pageable = PageRequest.of(0, limit, Sort.by("reputation").descending());
-        return userRepository.findAll(pageable).getContent();
+        Pageable pageable = PageRequest.of(0, limit);
+        
+        // Fetch top users by reputation
+        List<User> users = userRepository.findTopUsersByReputation(pageable);
+        
+        // Initialize lazy collections within transaction to avoid LazyInitializationException
+        // This ensures collections are loaded before transaction ends
+        users.forEach(user -> {
+            if (user.getQuestions() != null) {
+                user.getQuestions().size(); // Initialize questions
+            }
+            if (user.getAnswers() != null) {
+                user.getAnswers().size(); // Initialize answers
+            }
+        });
+        
+        return users;
     }
 
     /**
