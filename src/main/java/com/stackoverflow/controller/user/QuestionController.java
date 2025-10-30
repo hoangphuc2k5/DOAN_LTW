@@ -13,6 +13,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.security.core.Authentication;
 import jakarta.validation.Valid;
 import java.util.Set;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -38,6 +39,67 @@ public class QuestionController {
 
     @Autowired
     private TagService tagService;
+
+    // ============ SPECIFIC ROUTES (Must be BEFORE generic /{id} route) ============
+    
+    @GetMapping("/ask")
+    public String askQuestionForm(Model model) {
+        model.addAttribute("question", new Question());
+        model.addAttribute("pageTitle", "Ask a Question - Stack Overflow Clone");
+        return "question/ask";
+    }
+
+    @PostMapping("/ask")
+    public String askQuestion(
+            @Valid @ModelAttribute("question") Question question,
+            BindingResult result,
+            @RequestParam(required = false) MultipartFile[] files,
+            Authentication authentication,
+            Model model) {
+        
+        if (result.hasErrors()) {
+            model.addAttribute("pageTitle", "Ask a Question - Stack Overflow Clone");
+            return "question/ask";
+        }
+        
+        try {
+            User author = userService.findByUsername(authentication.getName())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            question.setAuthor(author);
+            
+            // Process tags from the tag string
+            if (question.getTagString() != null && !question.getTagString().isEmpty()) {
+                Set<String> tagNames = Arrays.stream(question.getTagString().split("\\s*,\\s*"))
+                    .filter(tag -> !tag.isEmpty())
+                    .collect(Collectors.toSet());
+                Set<Tag> tags = tagService.getOrCreateTags(tagNames);
+                question.setTags(tags);
+            }
+            
+            // Save question first to get ID
+            Question savedQuestion = questionService.save(question);
+            
+            // Handle image uploads if any
+            if (files != null && files.length > 0) {
+                for (MultipartFile file : files) {
+                    if (!file.isEmpty()) {
+                        ImageAttachment image = imageService.saveQuestionImage(file, savedQuestion);
+                        savedQuestion.getImages().add(image);
+                    }
+                }
+                questionService.save(savedQuestion); // Save again with images
+            }
+            
+            return "redirect:/questions/" + savedQuestion.getId();
+        } catch (Exception e) {
+            model.addAttribute("error", "Failed to create question: " + e.getMessage());
+            model.addAttribute("pageTitle", "Ask a Question - Stack Overflow Clone");
+            return "question/ask";
+        }
+    }
+
+    // ============ GENERIC ROUTES (with path variables) ============
 
     @GetMapping("/{id}")
     public String viewQuestion(@PathVariable Long id, Model model, Authentication authentication) {
@@ -106,68 +168,35 @@ public class QuestionController {
             }
         }
         
+        // Check if current user has upvoted question/answers
+        boolean hasUpvotedQuestion = false;
+        Set<Long> upvotedAnswerIds = new HashSet<>();
+        
+        if (authentication != null) {
+            String username = authentication.getName();
+            User currentUser = userService.findByUsername(username).orElse(null);
+            
+            if (currentUser != null) {
+                // Check if user upvoted the question
+                hasUpvotedQuestion = currentUser.getVotedQuestions() != null && 
+                                     currentUser.getVotedQuestions().contains(question);
+                
+                // Check which answers user upvoted
+                if (currentUser.getVotedAnswers() != null) {
+                    upvotedAnswerIds = currentUser.getVotedAnswers().stream()
+                        .map(Answer::getId)
+                        .collect(Collectors.toSet());
+                }
+            }
+        }
+        
         model.addAttribute("question", question);
         model.addAttribute("answers", answers);
+        model.addAttribute("hasUpvotedQuestion", hasUpvotedQuestion);
+        model.addAttribute("upvotedAnswerIds", upvotedAnswerIds);
         model.addAttribute("pageTitle", question.getTitle() + " - Stack Overflow Clone");
         
         return "question/view";
-    }
-
-    @GetMapping("/ask")
-    public String askQuestionForm(Model model) {
-        model.addAttribute("question", new Question());
-        model.addAttribute("pageTitle", "Ask a Question - Stack Overflow Clone");
-        return "question/ask";
-    }
-
-    @PostMapping("/ask")
-    public String askQuestion(
-            @Valid @ModelAttribute("question") Question question,
-            BindingResult result,
-            @RequestParam(required = false) MultipartFile[] files,
-            Authentication authentication,
-            Model model) {
-        
-        if (result.hasErrors()) {
-            model.addAttribute("pageTitle", "Ask a Question - Stack Overflow Clone");
-            return "question/ask";
-        }
-        
-        try {
-            User author = userService.findByUsername(authentication.getName())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-            
-            question.setAuthor(author);
-            
-            // Process tags from the tag string
-            if (question.getTagString() != null && !question.getTagString().isEmpty()) {
-                Set<String> tagNames = Arrays.stream(question.getTagString().split("\\s*,\\s*"))
-                    .filter(tag -> !tag.isEmpty())
-                    .collect(Collectors.toSet());
-                Set<Tag> tags = tagService.getOrCreateTags(tagNames);
-                question.setTags(tags);
-            }
-            
-            // Save question first to get ID
-            Question savedQuestion = questionService.save(question);
-            
-            // Handle image uploads if any
-            if (files != null && files.length > 0) {
-                for (MultipartFile file : files) {
-                    if (!file.isEmpty()) {
-                        ImageAttachment image = imageService.saveQuestionImage(file, savedQuestion);
-                        savedQuestion.getImages().add(image);
-                    }
-                }
-                questionService.save(savedQuestion); // Save again with images
-            }
-            
-            return "redirect:/questions/" + savedQuestion.getId();
-        } catch (Exception e) {
-            model.addAttribute("error", "Failed to create question: " + e.getMessage());
-            model.addAttribute("pageTitle", "Ask a Question - Stack Overflow Clone");
-            return "question/ask";
-        }
     }
 
     @GetMapping("/{id}/edit")

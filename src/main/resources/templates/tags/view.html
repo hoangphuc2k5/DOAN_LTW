@@ -34,15 +34,15 @@
                 <div class="col-md-2 text-center">
                     <div class="mb-2">
                         <strong th:text="${question.votes}">0</strong>
-                        <small class="text-muted d-block">votes</small>
+                        <small class="text-muted d-block">phiếu</small>
                     </div>
                     <div class="mb-2">
                         <strong th:text="${question.answers.size()}">0</strong>
-                        <small class="text-muted d-block">answers</small>
+                        <small class="text-muted d-block">trả lời</small>
                     </div>
                     <div>
                         <strong th:text="${question.views}">0</strong>
-                        <small class="text-muted d-block">views</small>
+                        <small class="text-muted d-block">lượt xem</small>
                     </div>
                 </div>
                 <div class="col-md-10">
@@ -55,7 +55,7 @@
                             <span th:each="qtag : ${question.tags}" class="badge bg-secondary me-1" th:text="${qtag.name}">tag</span>
                         </div>
                         <div class="text-muted small">
-                            asked <span th:text="${#temporals.format(question.createdAt, 'MMM dd, yyyy')}">date</span> by 
+                            đã hỏi <span th:text="${#temporals.format(question.createdAt, 'dd/MM/yyyy')}">date</span> bởi 
                             <a th:href="@{/users/{id}(id=${question.author.id})}" th:text="${question.author.username}">user</a>
                         </div>
                     </div>
@@ -68,7 +68,7 @@
     <nav th:if="${totalPages > 1}" aria-label="Questions pagination">
         <ul class="pagination justify-content-center">
             <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                <a class="page-link" th:href="@{/tags/{name}(name=${tag.name}, page=${currentPage - 1})}">Previous</a>
+                <a class="page-link" th:href="@{/tags/{name}(name=${tag.name}, page=${currentPage - 1})}">Trước</a>
             </li>
             <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}" 
                 class="page-item" 
@@ -76,7 +76,7 @@
                 <a class="page-link" th:href="@{/tags/{name}(name=${tag.name}, page=${i})}" th:text="${i + 1}">1</a>
             </li>
             <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
-                <a class="page-link" th:href="@{/tags/{name}(name=${tag.name}, page=${currentPage + 1})}">Next</a>
+                <a class="page-link" th:href="@{/tags/{name}(name=${tag.name}, page=${currentPage + 1})}">Sau</a>
             </li>
         </ul>
     </nav>

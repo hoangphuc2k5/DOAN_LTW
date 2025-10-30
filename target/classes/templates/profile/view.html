@@ -35,21 +35,21 @@
                         <div class="btn-group" th:if="${currentUser != null and currentUser.id != user.id}">
                             <form th:action="@{/users/{id}/follow(id=${user.id})}" method="post" th:if="${!isFollowing}">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-person-plus"></i> Follow
+                                    <i class="bi bi-person-plus"></i> Theo Dõi
                                 </button>
                             </form>
                             <form th:action="@{/users/{id}/unfollow(id=${user.id})}" method="post" th:if="${isFollowing}">
                                 <button type="submit" class="btn btn-outline-secondary">
-                                    <i class="bi bi-person-check"></i> Following
+                                    <i class="bi bi-person-check"></i> Đang Theo Dõi
                                 </button>
                             </form>
                             <a th:href="@{/messages/compose(to=${user.username})}" class="btn btn-outline-primary ms-2">
-                                <i class="bi bi-envelope"></i> Message
+                                <i class="bi bi-envelope"></i> Nhắn Tin
                             </a>
                         </div>
                         <div th:if="${currentUser != null and currentUser.id == user.id}">
                             <a th:href="@{/profile/edit}" class="btn btn-outline-primary">
-                                <i class="bi bi-pencil"></i> Edit Profile
+                                <i class="bi bi-pencil"></i> Chỉnh Sửa Hồ Sơ
                             </a>
                         </div>
                     </div>
@@ -59,31 +59,31 @@
                         <div class="col-auto">
                             <div class="stat-card bg-primary text-white rounded p-3">
                                 <div class="stat-value" th:text="${user.reputation}">0</div>
-                                <div class="stat-label">Reputation</div>
+                                <div class="stat-label">Danh Tiếng</div>
                             </div>
                         </div>
                         <div class="col-auto">
                             <div class="stat-card bg-success text-white rounded p-3">
                                 <div class="stat-value" th:text="${user.points}">0</div>
-                                <div class="stat-label">Points</div>
+                                <div class="stat-label">Điểm</div>
                             </div>
                         </div>
                         <div class="col-auto">
                             <div class="stat-card bg-warning text-dark rounded p-3">
-                                <div class="stat-value" th:text="${'Level ' + user.level}">Level 1</div>
-                                <div class="stat-label">Current Level</div>
+                                <div class="stat-value" th:text="${'Cấp ' + user.level}">Cấp 1</div>
+                                <div class="stat-label">Cấp Độ Hiện Tại</div>
                             </div>
                         </div>
                         <div class="col-auto">
                             <div class="stat-card bg-info text-white rounded p-3">
                                 <div class="stat-value" th:text="${totalQuestions}">0</div>
-                                <div class="stat-label">Questions</div>
+                                <div class="stat-label">Câu Hỏi</div>
                             </div>
                         </div>
                         <div class="col-auto">
                             <div class="stat-card bg-secondary text-white rounded p-3">
                                 <div class="stat-value" th:text="${totalAnswers}">0</div>
-                                <div class="stat-label">Answers</div>
+                                <div class="stat-label">Câu Trả Lời</div>
                             </div>
                         </div>
                     </div>
@@ -91,7 +91,7 @@
                     <!-- User Meta -->
                     <div class="mt-3 text-muted small">
                         <span th:if="${user.location}">
-                            <i class="bi bi-geo-alt"></i> <span th:text="${user.location}">Location</span>
+                            <i class="bi bi-geo-alt"></i> <span th:text="${user.location}">Địa chỉ</span>
                         </span>
                         <span th:if="${user.website}" class="ms-3">
                             <i class="bi bi-globe"></i> <a th:href="${user.website}" target="_blank" th:text="${user.website}">website</a>
@@ -103,7 +103,7 @@
                             <i class="bi bi-linkedin"></i> <a th:href="${user.linkedinUrl}" target="_blank">LinkedIn</a>
                         </span>
                         <span class="ms-3">
-                            <i class="bi bi-calendar"></i> Member since <span th:text="${#temporals.format(user.createdAt, 'MMM yyyy')}">Jan 2024</span>
+                            <i class="bi bi-calendar"></i> Thành viên từ <span th:text="${#temporals.format(user.createdAt, 'MMM yyyy')}">Jan 2024</span>
                         </span>
                     </div>
                 </div>
@@ -118,13 +118,13 @@
             <ul class="nav nav-tabs mb-3" role="tablist">
                 <li class="nav-item">
                     <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#questions" type="button">
-                        <i class="bi bi-question-circle"></i> Questions 
+                        <i class="bi bi-question-circle"></i> Câu Hỏi 
                         <span class="badge bg-primary" th:text="${totalQuestions}">0</span>
                     </button>
                 </li>
                 <li class="nav-item">
                     <button class="nav-link" data-bs-toggle="tab" data-bs-target="#answers" type="button">
-                        <i class="bi bi-chat-left-text"></i> Answers 
+                        <i class="bi bi-chat-left-text"></i> Câu Trả Lời 
                         <span class="badge bg-secondary" th:text="${totalAnswers}">0</span>
                     </button>
                 </li>

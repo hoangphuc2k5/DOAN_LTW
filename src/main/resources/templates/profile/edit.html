@@ -4,7 +4,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/main}">
 <head>
-    <title th:text="${pageTitle}">Edit Profile</title>
+    <title th:text="${pageTitle}">Chỉnh Sửa Hồ Sơ</title>
     <!-- Cropper.js CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
     <style>
@@ -27,7 +27,7 @@
 <body>
 <div layout:fragment="content">
     <div class="container mt-4">
-        <h2><i class="bi bi-person-gear"></i> Edit Profile</h2>
+        <h2><i class="bi bi-person-gear"></i> Chỉnh Sửa Hồ Sơ</h2>
 
         <!-- Alerts -->
         <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show">
@@ -62,7 +62,7 @@
                         </div>
                         <div>
                             <label for="profilePictureInput" class="btn btn-primary btn-sm">
-                                <i class="bi bi-camera"></i> Change Profile Picture
+                                <i class="bi bi-camera"></i> Đổi Ảnh Đại Diện
                             </label>
                             <input type="file" id="profilePictureInput" 
                                    class="d-none" accept="image/*" onchange="handleImageSelect(event)">
@@ -71,20 +71,20 @@
                             <button type="button" class="btn btn-outline-danger btn-sm ms-2" 
                                     onclick="window.location.href='/profile/remove-picture'"
                                     th:if="${user.profileImage != null && !user.profileImage.isEmpty()}">
-                                <i class="bi bi-trash"></i> Remove
+                                <i class="bi bi-trash"></i> Xóa
                             </button>
                         </div>
                         <small class="text-muted d-block mt-2">
-                            <i class="bi bi-info-circle"></i> Click to select an image, then crop it to your preferred size
+                            <i class="bi bi-info-circle"></i> Nhấn để chọn ảnh, sau đó cắt theo kích thước mong muốn
                         </small>
                     </div>
                     
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label">Username:</label>
+                                <label class="form-label">Tên Đăng Nhập:</label>
                                 <input type="text" class="form-control" th:value="${user.username}" disabled>
-                                <small class="text-muted">Username cannot be changed</small>
+                                <small class="text-muted">Tên đăng nhập không thể thay đổi</small>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -97,17 +97,17 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Bio:</label>
+                        <label class="form-label">Giới Thiệu:</label>
                         <textarea name="bio" class="form-control" rows="4" 
-                                  placeholder="Tell us about yourself..." th:text="${user.bio}"></textarea>
+                                  placeholder="Giới thiệu về bản thân..." th:text="${user.bio}"></textarea>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label">Location:</label>
+                                <label class="form-label">Địa Chỉ:</label>
                                 <input type="text" name="location" class="form-control" 
-                                       th:value="${user.location}" placeholder="City, Country">
+                                       th:value="${user.location}" placeholder="Thành phố, Quốc gia">
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -137,11 +137,11 @@
                     </div>
 
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save"></i> Save Changes
+                        <i class="bi bi-save"></i> Lưu Thay Đổi
                     </button>
-                    <a th:href="@{/profile/view}" class="btn btn-secondary">Cancel</a>
+                    <a th:href="@{/profile/view}" class="btn btn-secondary">Hủy</a>
                     <a th:href="@{/profile/change-password}" class="btn btn-warning float-end">
-                        <i class="bi bi-key"></i> Change Password
+                        <i class="bi bi-key"></i> Đổi Mật Khẩu
                     </a>
                 </form>
             </div>
@@ -150,22 +150,22 @@
         <!-- Profile Stats -->
         <div class="card mt-4">
             <div class="card-header bg-info text-white">
-                <h5><i class="bi bi-bar-chart"></i> Your Stats</h5>
+                <h5><i class="bi bi-bar-chart"></i> Thống Kê Của Bạn</h5>
             </div>
             <div class="card-body">
                 <div class="row text-center">
                     <div class="col-md-4">
                         <h3 th:text="${user.points}">0</h3>
-                        <p class="text-muted">Points</p>
+                        <p class="text-muted">Điểm</p>
                     </div>
                     <div class="col-md-4">
                         <h3 th:text="${user.level}">1</h3>
-                        <p class="text-muted">Level</p>
+                        <p class="text-muted">Cấp Độ</p>
                     </div>
                     <div class="col-md-4">
-                        <h3 class="text-success" th:if="${user.isActive}">Active</h3>
-                        <h3 class="text-danger" th:unless="${user.isActive}">Inactive</h3>
-                        <p class="text-muted">Status</p>
+                        <h3 class="text-success" th:if="${user.isActive}">Hoạt Động</h3>
+                        <h3 class="text-danger" th:unless="${user.isActive}">Không Hoạt Động</h3>
+                        <p class="text-muted">Trạng Thái</p>
                     </div>
                 </div>
             </div>
@@ -178,27 +178,27 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="imageCropModalLabel">
-                        <i class="bi bi-crop"></i> Crop Your Profile Picture
+                        <i class="bi bi-crop"></i> Cắt Ảnh Đại Diện
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div id="cropperContainer">
-                        <img id="cropperImage" src="" alt="Image to crop">
+                        <img id="cropperImage" src="" alt="Ảnh cần cắt">
                     </div>
                     <div class="mt-3">
                         <small class="text-muted">
                             <i class="bi bi-info-circle"></i> 
-                            Drag to move, scroll to zoom, drag corners to resize. Preview will be shown as a circle.
+                            Kéo để di chuyển, cuộn để phóng to, kéo góc để thay đổi kích thước. Xem trước sẽ hiển thị dạng hình tròn.
                         </small>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle"></i> Cancel
+                        <i class="bi bi-x-circle"></i> Hủy
                     </button>
                     <button type="button" class="btn btn-primary" onclick="cropAndSave()">
-                        <i class="bi bi-check-circle"></i> Apply Crop
+                        <i class="bi bi-check-circle"></i> Áp Dụng
                     </button>
                 </div>
             </div>

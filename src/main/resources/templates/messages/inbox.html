@@ -5,7 +5,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/main}">
 <head>
-    <title th:text="${pageTitle}">Messages</title>
+    <title th:text="${pageTitle}">Tin Nhắn</title>
     <style>
         /* Chat-specific styles */
         .messages-container {
@@ -175,12 +175,12 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h2 mb-1">
-                <i class="bi bi-chat-dots"></i> Messages
+                <i class="bi bi-chat-dots"></i> Tin Nhắn
             </h1>
             <p class="text-muted mb-0">Your conversations</p>
         </div>
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newMessageModal">
-            <i class="bi bi-plus-circle"></i> New Message
+            <i class="bi bi-plus-circle"></i> Tin Nhắn Mới
         </button>
     </div>
 
@@ -232,7 +232,7 @@
                         <h4>Select a conversation</h4>
                         <p class="text-muted">Choose a conversation from the list or start a new one</p>
                         <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#newMessageModal">
-                            <i class="bi bi-plus-circle"></i> New Message
+                            <i class="bi bi-plus-circle"></i> Tin Nhắn Mới
                         </button>
                     </div>
                 </div>
@@ -250,7 +250,7 @@
                             </div>
                         </div>
                         <a th:href="@{/messages/sent}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-send"></i> Sent Messages
+                            <i class="bi bi-send"></i> Tin Nhắn Đã Gửi
                         </a>
                     </div>
 
@@ -268,9 +268,9 @@
                                     <i class="bi bi-paperclip"></i>
                                 </button>
                         <textarea id="messageInput" class="composer-input" 
-                                  placeholder="Type a message..." rows="1"></textarea>
+                                  placeholder="Nhập tin nhắn..." rows="1"></textarea>
                         <button id="sendMessageBtn" class="btn btn-primary">
-                                    <i class="bi bi-send"></i> Send
+                                    <i class="bi bi-send"></i> Gửi
                                 </button>
                             </div>
                 </div>
@@ -284,7 +284,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="newMessageModalLabel">
-                        <i class="bi bi-search"></i> New Message - Find User
+                        <i class="bi bi-search"></i> Tin Nhắn Mới - Tìm Người Dùng
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -444,7 +444,7 @@ function loadConversation(username) {
                 messagesDiv.innerHTML = `
                     <div class="text-center text-muted py-5">
                         <i class="bi bi-chat-left-dots display-4 mb-3"></i>
-                        <p>No messages yet. Start the conversation!</p>
+                        <p>Chưa có tin nhắn nào. Bắt đầu cuộc trò chuyện!</p>
                     </div>
                 `;
             } else {

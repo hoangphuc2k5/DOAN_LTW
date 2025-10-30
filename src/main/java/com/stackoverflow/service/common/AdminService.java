@@ -184,22 +184,35 @@ public class AdminService {
      * Đổi mật khẩu cho người dùng (Admin reset password)
      */
     public void resetUserPassword(Long userId, String newPassword) {
+        System.out.println("🔐 AdminService.resetUserPassword called");
+        System.out.println("   User ID: " + userId);
+        System.out.println("   New Password Length: " + (newPassword != null ? newPassword.length() : 0));
+        
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
+        System.out.println("   User found: " + user.getUsername());
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+        System.out.println("   ✅ Password updated successfully");
     }
 
     /**
      * Thay đổi vai trò của người dùng
      */
     public void changeUserRole(Long userId, String newRole) {
+        System.out.println("👤 AdminService.changeUserRole called");
+        System.out.println("   User ID: " + userId);
+        System.out.println("   New Role: " + newRole);
+        
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
+        System.out.println("   User found: " + user.getUsername());
+        System.out.println("   Old Role: " + user.getRole());
         user.setRole(newRole);
         userRepository.save(user);
+        System.out.println("   ✅ Role changed successfully");
     }
 
     /**
@@ -332,6 +345,16 @@ public class AdminService {
             user.setProfileImage(null);
             userRepository.save(user);
         }
+    }
+    
+    /**
+     * Count users created within date range
+     */
+    public long countUsersByDateRange(LocalDateTime start, LocalDateTime end) {
+        return userRepository.findAll().stream()
+                .filter(u -> u.getCreatedAt() != null)
+                .filter(u -> !u.getCreatedAt().isBefore(start) && !u.getCreatedAt().isAfter(end))
+                .count();
     }
 }
 

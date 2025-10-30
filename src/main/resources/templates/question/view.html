@@ -5,7 +5,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/main}">
 <head>
-    <title th:text="${pageTitle}">Question</title>
+    <title th:text="${pageTitle}">Câu Hỏi</title>
 </head>
 <body>
 <div layout:fragment="content">
@@ -19,16 +19,24 @@
     <div class="card mb-4">
         <div class="card-body">
             <div class="row">
-                <div class="col-md-1 text-center">
-                    <!-- Vote buttons -->
-                    <button class="btn btn-outline-secondary btn-sm mb-2 vote-btn" 
-                            th:attr="data-id=${question.id}, data-type='question', data-action='upvote'" 
+                <div class="col-md-1 text-center vote-buttons">
+                    <!-- Upvote button: +1 vote -->
+                    <button class="btn btn-sm mb-2 upvote-btn" 
+                            th:classappend="${hasUpvotedQuestion} ? 'btn-success' : 'btn-outline-secondary'"
+                            th:attr="data-id=${question.id}, data-type='question'"
+                            th:title="'Tăng vote (+1)'"
                             sec:authorize="isAuthenticated()">
                         <i class="bi bi-caret-up-fill"></i>
                     </button>
-                    <div class="h4 mb-2" th:text="${question.votes}">0</div>
-                    <button class="btn btn-outline-secondary btn-sm" 
-                            th:attr="data-id=${question.id}, data-type='question', data-action='downvote'" 
+                    
+                    <!-- Vote count -->
+                    <div class="h4 mb-2 vote-count" th:text="${question.votes}">0</div>
+                    
+                    <!-- Downvote button: -1 vote (chỉ khi đã upvote) -->
+                    <button class="btn btn-sm downvote-btn" 
+                            th:classappend="${hasUpvotedQuestion} ? 'btn-outline-danger' : 'btn-outline-secondary'"
+                            th:attr="data-id=${question.id}, data-type='question'"
+                            th:title="'Giảm vote (-1, chỉ khi đã upvote)'"
                             sec:authorize="isAuthenticated()">
                         <i class="bi bi-caret-down-fill"></i>
                     </button>
@@ -82,7 +90,7 @@
                                         data-bs-target="#reportQuestionModal"
                                         th:attr="data-entity-id=${question.id}"
                                         title="Báo cáo vi phạm">
-                                    <i class="bi bi-flag"></i> Report
+                                    <i class="bi bi-flag"></i> Báo Cáo
                                 </button>
                             </div>
                         </div>
@@ -114,15 +122,24 @@
     <div th:each="answer : ${answers}" class="card mb-3">
         <div class="card-body" th:classappend="${answer.isAccepted ? 'border-success border-3' : ''}">
             <div class="row">
-                <div class="col-md-1 text-center">
-                    <button class="btn btn-outline-secondary btn-sm mb-2 vote-btn" 
-                            th:attr="data-id=${answer.id}, data-type='answer', data-action='upvote'" 
+                <div class="col-md-1 text-center vote-buttons">
+                    <!-- Upvote button: +1 vote -->
+                    <button class="btn btn-sm mb-2 upvote-btn" 
+                            th:classappend="${upvotedAnswerIds.contains(answer.id)} ? 'btn-success' : 'btn-outline-secondary'"
+                            th:attr="data-id=${answer.id}, data-type='answer'"
+                            th:title="'Tăng vote (+1)'"
                             sec:authorize="isAuthenticated()">
                         <i class="bi bi-caret-up-fill"></i>
                     </button>
-                    <div class="h4 mb-2" th:text="${answer.votes}">0</div>
-                    <button class="btn btn-outline-secondary btn-sm mb-2" 
-                            th:attr="data-id=${answer.id}, data-type='answer', data-action='downvote'" 
+                    
+                    <!-- Vote count -->
+                    <div class="h4 mb-2 vote-count" th:text="${answer.votes}">0</div>
+                    
+                    <!-- Downvote button: -1 vote (chỉ khi đã upvote) -->
+                    <button class="btn btn-sm mb-2 downvote-btn" 
+                            th:classappend="${upvotedAnswerIds.contains(answer.id)} ? 'btn-outline-danger' : 'btn-outline-secondary'"
+                            th:attr="data-id=${answer.id}, data-type='answer'"
+                            th:title="'Giảm vote (-1, chỉ khi đã upvote)'"
                             sec:authorize="isAuthenticated()">
                         <i class="bi bi-caret-down-fill"></i>
                     </button>
@@ -176,7 +193,7 @@
                                         data-bs-toggle="modal"
                                         th:attr="data-bs-target='#reportAnswerModal' + ${answer.id}, data-entity-id=${answer.id}"
                                         title="Báo cáo vi phạm">
-                                    <i class="bi bi-flag"></i> Report
+                                    <i class="bi bi-flag"></i> Báo Cáo
                                 </button>
                             </div>
                         </div>
@@ -349,6 +366,146 @@
             // Check if user is authenticated (from Thymeleaf)
             const isAuthenticated = /*[[${#authorization.expression('isAuthenticated()')}]]*/ false;
             
+            // ================== VOTE FUNCTIONALITY ==================
+            // UPVOTE: +1 vote (chỉ khi chưa vote)
+            // DOWNVOTE: -1 vote (chỉ khi đã upvote)
+            
+            // Handle UPVOTE buttons
+            document.querySelectorAll('.upvote-btn').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    if (!isAuthenticated) {
+                        window.location.href = '/auth/login';
+                        return;
+                    }
+                    
+                    const entityId = this.getAttribute('data-id');
+                    const entityType = this.getAttribute('data-type');
+                    const container = this.closest('.vote-buttons');
+                    const voteDisplay = container.querySelector('.vote-count');
+                    const upvoteBtn = this;
+                    const downvoteBtn = container.querySelector('.downvote-btn');
+                    
+                    // Disable buttons
+                    upvoteBtn.disabled = true;
+                    downvoteBtn.disabled = true;
+                    
+                    // Check if already upvoted (prevent double upvote)
+                    if (upvoteBtn.classList.contains('btn-success')) {
+                        showToast('Bạn đã upvote rồi!', 'info');
+                        upvoteBtn.disabled = false;
+                        downvoteBtn.disabled = false;
+                        return;
+                    }
+                    
+                    // Send AJAX request
+                    const baseUrl = entityType === 'question' ? '/questions' : '/answers';
+                    fetch(`${baseUrl}/${entityId}/upvote`, {
+                        method: 'POST',
+                        credentials: 'same-origin'
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => {
+                                throw new Error(err.message || 'Upvote failed');
+                            });
+                        }
+                        return response.text();
+                    })
+                    .then(newVoteCount => {
+                        // Update vote count
+                        voteDisplay.textContent = newVoteCount;
+                        voteDisplay.classList.add('text-success');
+                        setTimeout(() => voteDisplay.classList.remove('text-success'), 300);
+                        
+                        // Update button states
+                        upvoteBtn.classList.remove('btn-outline-secondary');
+                        upvoteBtn.classList.add('btn-success');
+                        downvoteBtn.classList.remove('btn-outline-secondary');
+                        downvoteBtn.classList.add('btn-outline-danger');
+                        
+                        showToast('Đã vote +1!', 'success');
+                    })
+                    .catch(error => {
+                        console.error('Upvote error:', error);
+                        showToast(error.message || 'Không thể upvote.', 'error');
+                    })
+                    .finally(() => {
+                        upvoteBtn.disabled = false;
+                        downvoteBtn.disabled = false;
+                    });
+                });
+            });
+            
+            // Handle DOWNVOTE buttons
+            document.querySelectorAll('.downvote-btn').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    if (!isAuthenticated) {
+                        window.location.href = '/auth/login';
+                        return;
+                    }
+                    
+                    const entityId = this.getAttribute('data-id');
+                    const entityType = this.getAttribute('data-type');
+                    const container = this.closest('.vote-buttons');
+                    const voteDisplay = container.querySelector('.vote-count');
+                    const upvoteBtn = container.querySelector('.upvote-btn');
+                    const downvoteBtn = this;
+                    
+                    // Check if upvoted (downvote chỉ hoạt động khi đã upvote)
+                    if (!upvoteBtn.classList.contains('btn-success')) {
+                        showToast('Bạn phải upvote trước khi downvote!', 'info');
+                        return;
+                    }
+                    
+                    // Disable buttons
+                    upvoteBtn.disabled = true;
+                    downvoteBtn.disabled = true;
+                    
+                    // Send AJAX request
+                    const baseUrl = entityType === 'question' ? '/questions' : '/answers';
+                    fetch(`${baseUrl}/${entityId}/downvote`, {
+                        method: 'POST',
+                        credentials: 'same-origin'
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            // Handle error response
+                            return response.json().then(err => {
+                                throw new Error(err.message || 'Downvote failed');
+                            });
+                        }
+                        return response.text();
+                    })
+                    .then(newVoteCount => {
+                        // Update vote count
+                        voteDisplay.textContent = newVoteCount;
+                        voteDisplay.classList.add('text-danger');
+                        setTimeout(() => voteDisplay.classList.remove('text-danger'), 300);
+                        
+                        // Reset button states
+                        upvoteBtn.classList.remove('btn-success');
+                        upvoteBtn.classList.add('btn-outline-secondary');
+                        downvoteBtn.classList.remove('btn-outline-danger');
+                        downvoteBtn.classList.add('btn-outline-secondary');
+                        
+                        showToast('Đã hủy vote (-1)', 'info');
+                    })
+                    .catch(error => {
+                        console.error('Downvote error:', error);
+                        showToast(error.message || 'Bạn phải upvote trước!', 'info');
+                    })
+                    .finally(() => {
+                        upvoteBtn.disabled = false;
+                        downvoteBtn.disabled = false;
+                    });
+                });
+            });
+            
+            // ================== REPORT FUNCTIONALITY ==================
             // Handle Report button clicks
             document.querySelectorAll('.report-btn').forEach(button => {
                 button.addEventListener('click', function(e) {
@@ -362,6 +519,47 @@
                     // Otherwise, let Bootstrap modal open normally
                 });
             });
+            
+            // ================== HELPER FUNCTIONS ==================
+            // Simple toast notification function
+            function showToast(message, type = 'info') {
+                // Determine alert class and icon based on type
+                let alertClass, iconClass;
+                
+                switch(type) {
+                    case 'success':
+                        alertClass = 'alert-success';
+                        iconClass = 'bi-check-circle';
+                        break;
+                    case 'error':
+                    case 'danger':
+                        alertClass = 'alert-danger';
+                        iconClass = 'bi-exclamation-triangle';
+                        break;
+                    case 'info':
+                    default:
+                        alertClass = 'alert-info';
+                        iconClass = 'bi-info-circle';
+                        break;
+                }
+                
+                // Create toast element
+                const toast = document.createElement('div');
+                toast.className = `alert ${alertClass} position-fixed top-0 end-0 m-3`;
+                toast.style.zIndex = '9999';
+                toast.style.minWidth = '250px';
+                toast.innerHTML = `
+                    <i class="bi ${iconClass}"></i>
+                    ${message}
+                `;
+                
+                document.body.appendChild(toast);
+                
+                // Auto-remove after 2 seconds
+                setTimeout(() => {
+                    toast.remove();
+                }, 2000);
+            }
         });
     </script>
 </div>

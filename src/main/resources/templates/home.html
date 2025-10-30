@@ -51,25 +51,15 @@
                 <div class="col-md-3">
                     <select class="form-select" onchange="window.location.href='?sort=' + this.value">
                         <option value="newest" th:selected="${sort == 'newest'}">
-                            <i class="bi bi-clock"></i> Newest
+                            <i class="bi bi-clock"></i> Mới Nhất
                         </option>
                         <option value="active" th:selected="${sort == 'active'}">
-                            <i class="bi bi-lightning"></i> Active
+                            <i class="bi bi-lightning"></i> Hoạt Động
                         </option>
                         <option value="votes" th:selected="${sort == 'votes'}">
-                            <i class="bi bi-arrow-up"></i> Most Votes
-                        </option>
-                        <option value="unanswered" th:selected="${sort == 'unanswered'}">
-                            <i class="bi bi-question"></i> Unanswered
+                            <i class="bi bi-arrow-up"></i> Nhiều Phiếu Nhất
                         </option>
                     </select>
-                </div>
-                
-                <!-- Filter by Tag -->
-                <div class="col-md-3">
-                    <a href="#" class="btn btn-outline-secondary w-100" data-bs-toggle="modal" data-bs-target="#filterModal">
-                        <i class="bi bi-funnel"></i> Filter by Tag
-                    </a>
                 </div>
             </div>
         </div>
@@ -80,19 +70,7 @@
         <button class="filter-tab" th:classappend="${filter == 'all' or filter == null} ? 'active' : ''" 
                 onclick="window.location.href='?filter=all'">
             <i class="bi bi-list-ul"></i> Tất Cả
-        </button>
-        <button class="filter-tab" th:classappend="${filter == 'pinned'} ? 'active' : ''" 
-                onclick="window.location.href='?filter=pinned'">
-            <i class="bi bi-pin-angle-fill"></i> Đã Ghim
-        </button>
-        <button class="filter-tab" th:classappend="${filter == 'unanswered'} ? 'active' : ''" 
-                onclick="window.location.href='?filter=unanswered'">
-            <i class="bi bi-chat-left"></i> Chưa Trả Lời
-        </button>
-        <button class="filter-tab" th:classappend="${filter == 'following'} ? 'active' : ''" 
-                onclick="window.location.href='?filter=following'" sec:authorize="isAuthenticated()">
-            <i class="bi bi-bookmark"></i> Đang Theo Dõi
-        </button>
+        </button>        
     </div>
 
     <!-- Questions List -->
@@ -202,40 +180,6 @@
             </li>
         </ul>
     </nav>
-
-    <!-- Filter by Tag Modal -->
-    <div class="modal fade" id="filterModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="bi bi-funnel"></i> Filter by Tags
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <input type="text" class="form-control" id="tagSearch" placeholder="Search tags...">
-                    </div>
-                    <div class="popular-tags">
-                        <h6>Popular Tags:</h6>
-                        <div class="d-flex flex-wrap gap-2">
-                            <a href="?tag=java" class="tag-badge">java</a>
-                            <a href="?tag=javascript" class="tag-badge">javascript</a>
-                            <a href="?tag=python" class="tag-badge">python</a>
-                            <a href="?tag=spring-boot" class="tag-badge">spring-boot</a>
-                            <a href="?tag=react" class="tag-badge">react</a>
-                            <a href="?tag=sql" class="tag-badge">sql</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <a href="/" class="btn btn-outline-danger">Clear Filters</a>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 </body>
 </html>

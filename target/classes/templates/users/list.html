@@ -4,19 +4,19 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/main}">
 <head>
-    <title th:text="${pageTitle}">Users</title>
+    <title th:text="${pageTitle}">Người Dùng</title>
 </head>
 <body>
 <div layout:fragment="content">
-    <h1 class="mb-4">Users</h1>
+    <h1 class="mb-4">Người Dùng</h1>
 
     <!-- Search Form -->
     <form th:action="@{/users}" method="get" class="mb-4">
         <div class="input-group">
             <input type="text" class="form-control" name="search" 
-                   th:value="${searchQuery}" placeholder="Search users...">
+                   th:value="${searchQuery}" placeholder="Tìm kiếm người dùng...">
             <button class="btn btn-primary" type="submit">
-                <i class="bi bi-search"></i> Search
+                <i class="bi bi-search"></i> Tìm Kiếm
             </button>
         </div>
     </form>
@@ -25,11 +25,11 @@
     <ul class="nav nav-tabs mb-3">
         <li class="nav-item">
             <a class="nav-link" th:classappend="${sort == 'reputation' ? 'active' : ''}" 
-               th:href="@{/users(sort='reputation')}">Reputation</a>
+               th:href="@{/users(sort='reputation')}">Uy Tín</a>
         </li>
         <li class="nav-item">
             <a class="nav-link" th:classappend="${sort == 'newest' ? 'active' : ''}" 
-               th:href="@{/users(sort='newest')}">New Users</a>
+               th:href="@{/users(sort='newest')}">Người Dùng Mới</a>
         </li>
     </ul>
 
@@ -54,11 +54,11 @@
                         </span>
                     </div>
                     <p class="card-text text-muted small text-center" 
-                       th:text="${user.location ?: 'Location not specified'}">
+                       th:text="${user.location ?: 'Chưa cập nhật vị trí'}">
                         Location
                     </p>
                     <div class="text-muted small text-center">
-                        Member since <span th:text="${#temporals.format(user.createdAt, 'MMM yyyy')}">date</span>
+                        Tham gia từ <span th:text="${#temporals.format(user.createdAt, 'MM/yyyy')}">date</span>
                     </div>
                 </div>
             </div>

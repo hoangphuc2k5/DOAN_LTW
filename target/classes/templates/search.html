@@ -4,22 +4,22 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/main}">
 <head>
-    <title th:text="${pageTitle}">Search Results</title>
+    <title th:text="${pageTitle}">Kết Quả Tìm Kiếm</title>
 </head>
 <body>
 <div layout:fragment="content">
     <h1 class="mb-4">
-        Search Results for: <span class="text-primary" th:text="${searchQuery}">query</span>
+        Kết quả tìm kiếm: <span class="text-primary" th:text="${searchQuery}">query</span>
     </h1>
     
     <p class="text-muted mb-4">
-        Found <strong th:text="${questions.getTotalElements()}">0</strong> results
+        Tìm thấy <strong th:text="${questions.getTotalElements()}">0</strong> kết quả
     </p>
     
     <div th:if="${questions.isEmpty()}" class="alert alert-info">
-        <i class="bi bi-info-circle"></i> No results found for your search.
+        <i class="bi bi-info-circle"></i> Không tìm thấy kết quả nào.
         <hr>
-        <p class="mb-0">Try different keywords or <a th:href="@{/questions/ask}">ask a new question</a>.</p>
+        <p class="mb-0">Thử từ khóa khác hoặc <a th:href="@{/questions/ask}">đặt câu hỏi mới</a>.</p>
     </div>
     
     <div th:each="question : ${questions}" class="card mb-3">
@@ -28,15 +28,15 @@
                 <div class="col-md-2 text-center">
                     <div class="mb-2">
                         <strong th:text="${question.votes}">0</strong>
-                        <small class="text-muted d-block">votes</small>
+                        <small class="text-muted d-block">phiếu</small>
                     </div>
                     <div class="mb-2">
                         <strong th:text="${question.answers.size()}">0</strong>
-                        <small class="text-muted d-block">answers</small>
+                        <small class="text-muted d-block">trả lời</small>
                     </div>
                     <div>
                         <strong th:text="${question.views}">0</strong>
-                        <small class="text-muted d-block">views</small>
+                        <small class="text-muted d-block">lượt xem</small>
                     </div>
                 </div>
                 <div class="col-md-10">
@@ -49,7 +49,7 @@
                             <span th:each="tag : ${question.tags}" class="badge bg-secondary me-1" th:text="${tag.name}">tag</span>
                         </div>
                         <div class="text-muted small">
-                            asked <span th:text="${#temporals.format(question.createdAt, 'MMM dd, yyyy')}">date</span> by 
+                            đã hỏi <span th:text="${#temporals.format(question.createdAt, 'dd/MM/yyyy')}">date</span> bởi 
                             <a th:href="@{/users/{id}(id=${question.author.id})}" th:text="${question.author.username}">user</a>
                         </div>
                     </div>

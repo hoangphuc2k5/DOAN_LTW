@@ -93,14 +93,11 @@
                                 <div class="list-group list-group-flush">
                                     <a th:href="@{/admin/users}" class="list-group-item list-group-item-action">
                                         <i class="bi bi-list-ul"></i> Xem Tất Cả Người Dùng
-                                    </a>
-                                    <a th:href="@{/admin/users/new}" class="list-group-item list-group-item-action">
-                                        <i class="bi bi-person-plus"></i> Tạo Người Dùng Mới
-                                    </a>
-                                    <a th:href="@{/admin/users/search}" class="list-group-item list-group-item-action">
+                                    </a>                                    
+                                    <a th:href="@{/users}" class="list-group-item list-group-item-action">
                                         <i class="bi bi-search"></i> Tìm Kiếm Người Dùng
                                     </a>
-                                    <a th:href="@{/admin/users/banned}" class="list-group-item list-group-item-action">
+                                    <a th:href="@{/admin/users}" class="list-group-item list-group-item-action">
                                         <i class="bi bi-person-x"></i> Người Dùng Bị Khóa
                                     </a>
                                 </div>
@@ -121,9 +118,6 @@
                                     <a th:href="@{/admin/questions}" class="list-group-item list-group-item-action">
                                         <i class="bi bi-question-circle"></i> Quản Lý Câu Hỏi
                                     </a>
-                                    <a th:href="@{/admin/comments}" class="list-group-item list-group-item-action">
-                                        <i class="bi bi-chat-dots"></i> Quản Lý Bình Luận
-                                    </a>
                                     <a th:href="@{/admin/tags}" class="list-group-item list-group-item-action">
                                         <i class="bi bi-tags"></i> Quản Lý Thẻ
                                     </a>
@@ -142,7 +136,7 @@
                             </div>
                             <div class="card-body">
                                 <div class="list-group list-group-flush">
-                                    <a th:href="@{/admin/moderation/pending-questions}" class="list-group-item list-group-item-action">
+                                    <a th:href="@{/admin/moderation}" class="list-group-item list-group-item-action">
                                         <i class="bi bi-clock-history"></i> Câu Hỏi Chờ Duyệt
                                         <span th:if="${pendingQuestions > 0}" class="badge bg-danger ms-2" th:text="${pendingQuestions}">5</span>
                                     </a>

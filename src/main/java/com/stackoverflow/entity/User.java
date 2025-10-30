@@ -82,6 +82,7 @@ public class User {
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Answer> answers = new ArrayList<>();
 
+    // Track UPVOTES (Toggle: user vote hoặc undo)
     @ManyToMany
     @JoinTable(
         name = "user_votes_questions",

@@ -67,12 +67,38 @@
                             </div>
                             <div class="card-body">
                                 <div class="d-grid gap-2">
-                                    <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#changeRoleModal">
-                                        <i class="bi bi-shield-check"></i> Đổi Vai Trò
-                                    </button>
-                                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#resetPasswordModal">
-                                        <i class="bi bi-key"></i> Đặt Lại Mật Khẩu
-                                    </button>
+                                    <!-- CHANGE ROLE - Inline Form -->
+                                    <div class="border rounded p-2 bg-light">
+                                        <form th:action="@{/admin/users/{id}/change-role(id=${user.id})}" method="post">
+                                            <label class="form-label small mb-1"><strong>Đổi Vai Trò:</strong></label>
+                                            <div class="input-group input-group-sm">
+                                                <select name="role" class="form-select" required>
+                                                    <option value="USER" th:selected="${user.role == 'USER'}">USER</option>
+                                                    <option value="MANAGER" th:selected="${user.role == 'MANAGER'}">MANAGER</option>
+                                                    <option value="ADMIN" th:selected="${user.role == 'ADMIN'}">ADMIN</option>
+                                                </select>
+                                                <button type="submit" class="btn btn-info">
+                                                    <i class="bi bi-shield-check"></i> Đổi
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    
+                                    <!-- RESET PASSWORD - Inline Form -->
+                                    <div class="border rounded p-2 bg-light">
+                                        <form th:action="@{/admin/users/{id}/reset-password(id=${user.id})}" method="post">
+                                            <label class="form-label small mb-1"><strong>Đặt Lại Mật Khẩu:</strong></label>
+                                            <div class="input-group input-group-sm">
+                                                <input type="password" name="newPassword" class="form-control" placeholder="Mật khẩu mới (min 6 ký tự)" required minlength="6">
+                                                <button type="submit" class="btn btn-warning">
+                                                    <i class="bi bi-key"></i> Đặt Lại
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    
+                                    <hr class="my-2">
+                                    
                                     <form th:if="${!user.isBanned}" th:action="@{/admin/users/{id}/ban(id=${user.id})}" method="post" onsubmit="return confirm('Bạn có chắc muốn khóa người dùng này?')">
                                         <button type="submit" class="btn btn-danger btn-sm w-100">
                                             <i class="bi bi-lock"></i> Khóa Người Dùng
@@ -238,60 +264,14 @@
                     </div>
                 </div>
 
-                <!-- Modals -->
-                <!-- Change Role Modal -->
-                <div class="modal fade" id="changeRoleModal" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Đổi Vai Trò</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <form th:action="@{/admin/users/{id}/change-role(id=${user.id})}" method="post">
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <label class="form-label">Chọn Vai Trò Mới:</label>
-                                        <select name="role" class="form-select" required>
-                                            <option value="USER" th:selected="${user.role == 'USER'}">Người Dùng</option>
-                                            <option value="MANAGER" th:selected="${user.role == 'MANAGER'}">Quản Lý</option>
-                                            <option value="ADMIN" th:selected="${user.role == 'ADMIN'}">Quản Trị Viên</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                                    <button type="submit" class="btn btn-primary">Đổi Vai Trò</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Reset Password Modal -->
-                <div class="modal fade" id="resetPasswordModal" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Đặt Lại Mật Khẩu</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <form th:action="@{/admin/users/{id}/reset-password(id=${user.id})}" method="post">
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <label class="form-label">Mật Khẩu Mới:</label>
-                                        <input type="password" name="newPassword" class="form-control" required minlength="6">
-                                        <small class="text-muted">Tối thiểu 6 ký tự</small>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                                    <button type="submit" class="btn btn-warning">Đặt Lại</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
 </div>
+
+<th:block layout:fragment="extra-scripts">
+<script>
+// Admin User View - Inline Forms
+console.log('✅ Admin User View Page Loaded - Using Inline Forms');
+console.log('   Page:', window.location.href);
+</script>
+</th:block>
 </body>
 </html>

@@ -11,6 +11,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -88,32 +90,61 @@ public class AnswerService {
         answerRepository.save(answer);
     }
 
+    /**
+     * SIMPLE UPVOTE LOGIC (Toggle):
+     * - Chưa vote → Click upvote → +1 vote
+     * - Đã vote → Click upvote → -1 vote (undo)
+     * 
+     * Example: 13 votes → user click → 14 votes → user click again → 13 votes
+     */
     public void upvoteAnswer(Answer answer, User user) {
-        // If already upvoted, do nothing (can't upvote twice)
-        if (user.getVotedAnswers().contains(answer)) {
-            return;
+        boolean hasUpvoted = user.getVotedAnswers().contains(answer);
+        
+        System.out.println("🔍 Upvote Answer #" + answer.getId() + " by User #" + user.getId());
+        System.out.println("   Current votes: " + answer.getVotes());
+        System.out.println("   Has upvoted: " + hasUpvoted);
+        
+        if (hasUpvoted) {
+            // Already upvoted → Undo upvote (-1)
+            System.out.println("   ➡️ Undo upvote: " + answer.getVotes() + " - 1 = " + (answer.getVotes() - 1));
+            answer.downvote();
+            user.getVotedAnswers().remove(answer);
+        } else {
+            // Not voted yet → Add upvote (+1)
+            System.out.println("   ➡️ New upvote: " + answer.getVotes() + " + 1 = " + (answer.getVotes() + 1));
+            answer.upvote();
+            user.getVotedAnswers().add(answer);
         }
         
-        // If previously downvoted, remove downvote first (undo downvote)
-        // For simplicity, always allow upvote
-        
-        answer.upvote();
-        user.getVotedAnswers().add(answer);
+        System.out.println("   ✅ Final votes: " + answer.getVotes());
         answerRepository.save(answer);
     }
 
+    /**
+     * Downvote (Undo upvote):
+     * - Chỉ hoạt động khi user ĐÃ upvote trước đó
+     * - Giảm 1 vote và remove khỏi votedAnswers
+     */
     public void downvoteAnswer(Answer answer, User user) {
-        // If user has upvoted, remove upvote and downvote (net change: -2)
-        if (user.getVotedAnswers().contains(answer)) {
-            answer.downvote(); // Remove upvote
-            answer.downvote(); // Apply downvote
-            user.getVotedAnswers().remove(answer);
-            answerRepository.save(answer);
-        } else {
-            // User hasn't voted yet, apply downvote directly
+        boolean hasUpvoted = user.getVotedAnswers().contains(answer);
+        
+        System.out.println("🔽 Downvote Answer #" + answer.getId() + " by User #" + user.getId());
+        System.out.println("   Current votes: " + answer.getVotes());
+        System.out.println("   Has upvoted: " + hasUpvoted);
+        
+        if (hasUpvoted) {
+            // Đã upvote → Downvote = Undo (-1)
+            System.out.println("   ➡️ Downvote (undo upvote): " + answer.getVotes() + " - 1 = " + (answer.getVotes() - 1));
             answer.downvote();
-            answerRepository.save(answer);
+            user.getVotedAnswers().remove(answer);
+        } else {
+            // Chưa upvote → Không cho downvote
+            System.out.println("   ⚠️ Cannot downvote - must upvote first");
+            throw new RuntimeException("Bạn phải upvote trước khi downvote");
         }
+        
+        System.out.println("   ✅ Final votes: " + answer.getVotes());
+        answerRepository.save(answer);
     }
 
     public Long countByAuthor(User author) {
@@ -143,6 +174,16 @@ public class AnswerService {
      */
     public Answer save(Answer answer) {
         return answerRepository.save(answer);
+    }
+    
+    /**
+     * Count answers created within date range
+     */
+    public long countByDateRange(LocalDateTime start, LocalDateTime end) {
+        return answerRepository.findAll().stream()
+                .filter(a -> a.getCreatedAt() != null)
+                .filter(a -> !a.getCreatedAt().isBefore(start) && !a.getCreatedAt().isAfter(end))
+                .count();
     }
 }
 

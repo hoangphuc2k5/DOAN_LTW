@@ -15,6 +15,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -165,33 +167,61 @@ public class QuestionService {
         questionRepository.save(question);
     }
 
+    /**
+     * SIMPLE UPVOTE LOGIC (Toggle):
+     * - Chưa vote → Click upvote → +1 vote
+     * - Đã vote → Click upvote → -1 vote (undo)
+     * 
+     * Example: 13 votes → user click → 14 votes → user click again → 13 votes
+     */
     public void upvoteQuestion(Question question, User user) {
-        // If already upvoted, do nothing (can't upvote twice)
-        if (user.getVotedQuestions().contains(question)) {
-            return;
+        boolean hasUpvoted = user.getVotedQuestions().contains(question);
+        
+        System.out.println("🔍 Upvote Question #" + question.getId() + " by User #" + user.getId());
+        System.out.println("   Current votes: " + question.getVotes());
+        System.out.println("   Has upvoted: " + hasUpvoted);
+        
+        if (hasUpvoted) {
+            // Already upvoted → Undo upvote (-1)
+            System.out.println("   ➡️ Undo upvote: " + question.getVotes() + " - 1 = " + (question.getVotes() - 1));
+            question.downvote();
+            user.getVotedQuestions().remove(question);
+        } else {
+            // Not voted yet → Add upvote (+1)
+            System.out.println("   ➡️ New upvote: " + question.getVotes() + " + 1 = " + (question.getVotes() + 1));
+            question.upvote();
+            user.getVotedQuestions().add(question);
         }
         
-        // If previously downvoted, remove downvote first (undo downvote)
-        // This is tracked by: user NOT in votedQuestions but vote count is low
-        // For simplicity, always allow upvote
-        
-        question.upvote();
-        user.getVotedQuestions().add(question);
+        System.out.println("   ✅ Final votes: " + question.getVotes());
         questionRepository.save(question);
     }
 
+    /**
+     * Downvote (Undo upvote):
+     * - Chỉ hoạt động khi user ĐÃ upvote trước đó
+     * - Giảm 1 vote và remove khỏi votedQuestions
+     */
     public void downvoteQuestion(Question question, User user) {
-        // If user has upvoted, remove upvote and downvote (net change: -2)
-        if (user.getVotedQuestions().contains(question)) {
-            question.downvote(); // Remove upvote
-            question.downvote(); // Apply downvote
-            user.getVotedQuestions().remove(question);
-            questionRepository.save(question);
-        } else {
-            // User hasn't voted yet, apply downvote directly
+        boolean hasUpvoted = user.getVotedQuestions().contains(question);
+        
+        System.out.println("🔽 Downvote Question #" + question.getId() + " by User #" + user.getId());
+        System.out.println("   Current votes: " + question.getVotes());
+        System.out.println("   Has upvoted: " + hasUpvoted);
+        
+        if (hasUpvoted) {
+            // Đã upvote → Downvote = Undo (-1)
+            System.out.println("   ➡️ Downvote (undo upvote): " + question.getVotes() + " - 1 = " + (question.getVotes() - 1));
             question.downvote();
-            questionRepository.save(question);
+            user.getVotedQuestions().remove(question);
+        } else {
+            // Chưa upvote → Không cho downvote
+            System.out.println("   ⚠️ Cannot downvote - must upvote first");
+            throw new RuntimeException("Bạn phải upvote trước khi downvote");
         }
+        
+        System.out.println("   ✅ Final votes: " + question.getVotes());
+        questionRepository.save(question);
     }
 
     public Long countByAuthor(User author) {
@@ -316,5 +346,15 @@ public class QuestionService {
     
     public long countApproved() {
         return questionRepository.countByIsApproved(true);
+    }
+    
+    /**
+     * Count questions created within date range
+     */
+    public long countByDateRange(LocalDateTime start, LocalDateTime end) {
+        return questionRepository.findAll().stream()
+                .filter(q -> q.getCreatedAt() != null)
+                .filter(q -> !q.getCreatedAt().isBefore(start) && !q.getCreatedAt().isAfter(end))
+                .count();
     }
 }

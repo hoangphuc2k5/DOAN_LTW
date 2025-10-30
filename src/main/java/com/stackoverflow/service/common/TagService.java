@@ -127,4 +127,11 @@ public class TagService {
         tagRepository.delete(sourceTag);
         tagRepository.save(targetTag);
     }
+    
+    /**
+     * Count total tags
+     */
+    public long count() {
+        return tagRepository.count();
+    }
 }

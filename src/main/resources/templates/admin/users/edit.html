@@ -76,7 +76,7 @@
                                                    class="d-none" accept="image/*" onchange="handleImageSelect(event)">
                                             <input type="hidden" id="croppedImageData" name="croppedImageData">
                                             <button type="button" class="btn btn-outline-danger btn-sm ms-2" 
-                                                    onclick="if(confirm('Xóa avatar?')) window.location.href='/admin/users/' + [[${user.id}]] + '/remove-picture'"
+                                                    th:onclick="|if(confirm('Xóa avatar?')) window.location.href='/admin/users/${user.id}/remove-picture'|"
                                                     th:if="${user.profileImage != null && !user.profileImage.isEmpty()}">
                                                 <i class="bi bi-trash"></i> Xóa
                                             </button>

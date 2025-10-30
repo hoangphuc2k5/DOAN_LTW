@@ -5,7 +5,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/main}">
 <head>
-    <title th:text="${pageTitle}">User Profile</title>
+    <title th:text="${pageTitle}">Hồ Sơ Người Dùng</title>
 </head>
 <body>
 <div layout:fragment="content">
@@ -17,13 +17,13 @@
                     <h3 class="mt-3" th:text="${user.username}">Username</h3>
                     <div class="mb-3">
                         <span class="badge bg-warning text-dark">
-                            <i class="bi bi-star-fill"></i> <span th:text="${user.reputation}">0</span> reputation
+                            <i class="bi bi-star-fill"></i> <span th:text="${user.reputation}">0</span> uy tín
                         </span>
                     </div>
                     <p class="text-muted" th:if="${user.location}" th:text="${user.location}">Location</p>
                     <p th:if="${user.website}">
                         <a th:href="${user.website}" target="_blank" class="text-decoration-none">
-                            <i class="bi bi-link-45deg"></i> Website
+                            <i class="bi bi-link-45deg"></i> Trang Web
                         </a>
                     </p>
                 </div>
@@ -31,24 +31,24 @@
             
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">Stats</h5>
+                    <h5 class="card-title">Thống Kê</h5>
                     <ul class="list-unstyled">
                         <li class="mb-2">
                             <i class="bi bi-question-circle"></i> 
-                            <strong th:text="${questionCount}">0</strong> questions
+                            <strong th:text="${questionCount}">0</strong> câu hỏi
                         </li>
                         <li class="mb-2">
                             <i class="bi bi-chat-left-text"></i> 
-                            <strong th:text="${answerCount}">0</strong> answers
+                            <strong th:text="${answerCount}">0</strong> câu trả lời
                         </li>
                         <li class="mb-2">
                             <i class="bi bi-eye"></i> 
-                            <strong th:text="${user.views}">0</strong> profile views
+                            <strong th:text="${user.views}">0</strong> lượt xem hồ sơ
                         </li>
                     </ul>
                     <hr>
                     <p class="text-muted small mb-0">
-                        Member since <span th:text="${#temporals.format(user.createdAt, 'MMM dd, yyyy')}">date</span>
+                        Tham gia từ <span th:text="${#temporals.format(user.createdAt, 'dd/MM/yyyy')}">date</span>
                     </p>
                 </div>
             </div>
@@ -57,7 +57,7 @@
         <div class="col-md-9">
             <div th:if="${user.about}" class="card mb-4">
                 <div class="card-body">
-                    <h5 class="card-title">About</h5>
+                    <h5 class="card-title">Giới Thiệu</h5>
                     <p th:text="${user.about}">User bio</p>
                 </div>
             </div>
@@ -66,20 +66,20 @@
                 <li class="nav-item">
                     <a class="nav-link" th:classappend="${currentTab == 'questions' ? 'active' : ''}"
                        th:href="@{/users/{id}(id=${user.id}, tab='questions')}">
-                        Questions (<span th:text="${questionCount}">0</span>)
+                        Câu Hỏi (<span th:text="${questionCount}">0</span>)
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" th:classappend="${currentTab == 'answers' ? 'active' : ''}"
                        th:href="@{/users/{id}(id=${user.id}, tab='answers')}">
-                        Answers (<span th:text="${answerCount}">0</span>)
+                        Câu Trả Lời (<span th:text="${answerCount}">0</span>)
                     </a>
                 </li>
             </ul>
             
             <div th:if="${currentTab == 'questions'}">
                 <div th:if="${questions.isEmpty()}" class="alert alert-info">
-                    No questions yet.
+                    Chưa có câu hỏi nào.
                 </div>
                 <div th:each="question : ${questions}" class="card mb-3">
                     <div class="card-body">
@@ -103,7 +103,7 @@
             
             <div th:if="${currentTab == 'answers'}">
                 <div th:if="${answers.isEmpty()}" class="alert alert-info">
-                    No answers yet.
+                    Chưa có câu trả lời nào.
                 </div>
                 <div th:each="answer : ${answers}" class="card mb-3">
                     <div class="card-body">
@@ -114,11 +114,11 @@
                             <div class="flex-grow-1">
                                 <p class="mb-2" th:text="${#strings.abbreviate(answer.body, 200)}">Answer preview</p>
                                 <a th:href="@{/questions/{id}(id=${answer.question.id})}" class="text-decoration-none">
-                                    → View question: <span th:text="${answer.question.title}">Question</span>
+                                    → Xem câu hỏi: <span th:text="${answer.question.title}">Question</span>
                                 </a>
                                 <div class="text-muted small mt-2">
-                                    <i class="bi bi-arrow-up"></i> <span th:text="${answer.votes}">0</span> votes
-                                    • <span th:text="${#temporals.format(answer.createdAt, 'MMM dd, yyyy')}">date</span>
+                                    <i class="bi bi-arrow-up"></i> <span th:text="${answer.votes}">0</span> phiếu
+                                    • <span th:text="${#temporals.format(answer.createdAt, 'dd/MM/yyyy')}">date</span>
                                 </div>
                             </div>
                         </div>

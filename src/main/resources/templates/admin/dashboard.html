@@ -206,8 +206,8 @@
                         <i class="bi bi-question-circle text-success"></i> Quản Lý Câu Hỏi
                         <span class="badge bg-success float-end" th:text="${totalQuestions}">0</span>
                     </a>
-                    <a th:href="@{/admin/comments}" class="list-group-item list-group-item-action">
-                        <i class="bi bi-chat text-info"></i> Quản Lý Bình Luận
+                    <a th:href="@{/admin/answers}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-chat text-info"></i> Quản Lý Câu Trả Lời
                         <span class="badge bg-info float-end" th:text="${totalComments}">0</span>
                     </a>
                     <a th:href="@{/admin/moderation}" class="list-group-item list-group-item-action">
@@ -323,7 +323,7 @@
                     <h5 class="mb-0">
                         <i class="bi bi-hourglass-split text-warning"></i> Câu Hỏi Chờ Duyệt
                     </h5>
-                    <a th:href="@{/admin/moderation/pending-questions}" class="btn btn-sm btn-outline-warning">
+                    <a th:href="@{/admin/questions}" class="btn btn-sm btn-outline-warning">
                         Xem tất cả
                     </a>
                 </div>

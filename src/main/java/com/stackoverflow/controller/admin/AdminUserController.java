@@ -282,11 +282,18 @@ public class AdminUserController {
             @RequestParam String newPassword,
             RedirectAttributes redirectAttributes) {
         
+        System.out.println("🔐 AdminUserController.resetPassword endpoint called");
+        System.out.println("   Path ID: " + id);
+        System.out.println("   Password received: " + (newPassword != null && !newPassword.isEmpty() ? "Yes" : "No"));
+        
         try {
             adminService.resetUserPassword(id, newPassword);
             redirectAttributes.addFlashAttribute("successMessage", 
                 "Đặt lại mật khẩu thành công!");
+            System.out.println("   ✅ Redirect with success message");
         } catch (Exception e) {
+            System.err.println("   ❌ Error: " + e.getMessage());
+            e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorMessage", 
                 "Lỗi: " + e.getMessage());
         }
@@ -303,11 +310,18 @@ public class AdminUserController {
             @RequestParam String role,
             RedirectAttributes redirectAttributes) {
         
+        System.out.println("👤 AdminUserController.changeRole endpoint called");
+        System.out.println("   Path ID: " + id);
+        System.out.println("   Role parameter: " + role);
+        
         try {
             adminService.changeUserRole(id, role);
             redirectAttributes.addFlashAttribute("successMessage", 
                 "Đã thay đổi vai trò thành " + role + " thành công!");
+            System.out.println("   ✅ Redirect with success message");
         } catch (Exception e) {
+            System.err.println("   ❌ Error: " + e.getMessage());
+            e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorMessage", 
                 "Lỗi: " + e.getMessage());
         }

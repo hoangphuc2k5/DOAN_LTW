@@ -1,10 +1,9 @@
 package com.stackoverflow.controller.admin;
 
 import com.stackoverflow.entity.ActivityLog;
-import com.stackoverflow.service.common.AdminService;
-import com.stackoverflow.service.common.QuestionService;
-import com.stackoverflow.service.common.AnswerService;
-import com.stackoverflow.service.common.ActivityLogService;
+import com.stackoverflow.entity.Question;
+import com.stackoverflow.entity.Report;
+import com.stackoverflow.service.common.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -35,30 +35,72 @@ public class AdminDashboardController {
     
     @Autowired
     private ActivityLogService activityLogService;
+    
+    @Autowired
+    private TagService tagService;
+    
+    @Autowired
+    private ReportService reportService;
 
     /**
-     * Trang dashboard admin
+     * Trang dashboard admin với dữ liệu thực từ database
      */
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
-        model.addAttribute("pageTitle", "Trang Quản Trị - Stack Overflow Clone");
+        model.addAttribute("pageTitle", "Trang Quản Trị - EDUMOET");
         
         // User statistics
-        model.addAttribute("totalUsers", adminService.getAllUsers().size());
-        model.addAttribute("activeUsers", adminService.countActiveUsers());
-        model.addAttribute("bannedUsers", adminService.countBannedUsers());
-        model.addAttribute("newUsersToday", 0); // TODO: Implement
+        long totalUsers = adminService.getAllUsers().size();
+        long activeUsers = adminService.countActiveUsers();
+        long bannedUsers = adminService.countBannedUsers();
+        long newUsersToday = adminService.countUsersByDateRange(
+            LocalDateTime.now().toLocalDate().atStartOfDay(),
+            LocalDateTime.now()
+        );
         
-        // Content statistics - defaults for now
-        model.addAttribute("totalQuestions", 0);
-        model.addAttribute("newQuestionsToday", 0);
-        model.addAttribute("totalAnswers", 0);
-        model.addAttribute("newAnswersToday", 0);
-        model.addAttribute("totalComments", 0);
-        model.addAttribute("totalTags", 0);
-        model.addAttribute("pendingReports", 0);
-        model.addAttribute("pendingQuestions", 0);
-        model.addAttribute("unreadNotifications", 0);
+        model.addAttribute("totalUsers", totalUsers);
+        model.addAttribute("activeUsers", activeUsers);
+        model.addAttribute("bannedUsers", bannedUsers);
+        model.addAttribute("newUsersToday", newUsersToday);
+        
+        // Content statistics
+        long totalQuestions = questionService.countAllQuestions();
+        long pendingQuestions = questionService.countPending();
+        long totalAnswers = answerService.countAll();
+        long totalTags = tagService.count();
+        
+        // Count items created today
+        LocalDateTime startOfToday = LocalDateTime.now().toLocalDate().atStartOfDay();
+        long newQuestionsToday = questionService.countByDateRange(startOfToday, LocalDateTime.now());
+        long newAnswersToday = answerService.countByDateRange(startOfToday, LocalDateTime.now());
+        
+        model.addAttribute("totalQuestions", totalQuestions);
+        model.addAttribute("newQuestionsToday", newQuestionsToday);
+        model.addAttribute("totalAnswers", totalAnswers);
+        model.addAttribute("newAnswersToday", newAnswersToday);
+        model.addAttribute("totalComments", totalAnswers); // Using answers as comments
+        model.addAttribute("totalTags", totalTags);
+        
+        // Moderation statistics
+        long pendingReports = reportService.countPendingReports();
+        model.addAttribute("pendingReports", pendingReports);
+        model.addAttribute("pendingQuestions", pendingQuestions);
+        model.addAttribute("unreadNotifications", 0L); // Can implement if needed
+        
+        // Recent activities (last 10)
+        Pageable activityPageable = PageRequest.of(0, 10, Sort.by("createdAt").descending());
+        List<ActivityLog> recentActivities = activityLogService.getAllLogs(activityPageable).getContent();
+        model.addAttribute("recentActivities", recentActivities);
+        
+        // Recent reports (last 5 pending)
+        Pageable reportPageable = PageRequest.of(0, 5, Sort.by("createdAt").descending());
+        List<Report> recentReports = reportService.getPendingReports(reportPageable).getContent();
+        model.addAttribute("recentReports", recentReports);
+        
+        // Pending questions (last 5)
+        Pageable questionPageable = PageRequest.of(0, 5, Sort.by("createdAt").descending());
+        List<Question> pendingQuestionsList = questionService.getAllPendingQuestions(questionPageable).getContent();
+        model.addAttribute("pendingQuestionsList", pendingQuestionsList);
         
         return "admin/dashboard";
     }

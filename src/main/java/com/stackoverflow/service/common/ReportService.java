@@ -219,5 +219,19 @@ public class ReportService {
         
         System.out.println("✅ Report #" + reportId + " đã được xử lý");
     }
+    
+    /**
+     * Get pending reports with pagination
+     */
+    public Page<Report> getPendingReports(Pageable pageable) {
+        return reportRepository.findByStatus("PENDING", pageable);
+    }
+    
+    /**
+     * Count pending reports
+     */
+    public long countPendingReports() {
+        return reportRepository.countByStatus("PENDING");
+    }
 }
 
