@@ -11,11 +11,11 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.stackoverflow</groupId>
-    <artifactId>stackoverflow-clone-complete</artifactId>
+    <groupId>com.edumoet</groupId>
+    <artifactId>EDMOET</artifactId>
     <version>1.0.0</version>
-    <name>StackOverflow Clone Complete</name>
-    <description>StackOverflow Clone - Complete version with Admin, Manager, and User modules</description>
+    <name>EDMOET</name>
+    <description>EDMOET</description>
 
     <!-- 🔴 QUAN TRỌNG: đổi packaging thành war -->
     <packaging>war</packaging>
