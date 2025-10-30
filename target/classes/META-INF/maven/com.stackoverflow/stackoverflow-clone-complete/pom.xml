@@ -150,6 +150,20 @@
 			<artifactId>sockjs-client</artifactId>
 			<version>1.5.1</version>
 		</dependency>
+		
+		<!-- OpenAI Java SDK for ChatGPT Integration -->
+		<dependency>
+			<groupId>com.theokanning.openai-gpt3-java</groupId>
+			<artifactId>service</artifactId>
+			<version>0.18.2</version>
+		</dependency>
+		
+		<!-- OkHttp (required by OpenAI SDK) -->
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>okhttp</artifactId>
+			<version>4.12.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>
