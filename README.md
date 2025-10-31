@@ -219,19 +219,8 @@ mvn spring-boot:run
 
 Ứng dụng sẽ chạy tại: `http://localhost:8080`
 
-### Build WAR File (Production)
-
-```bash
-mvn clean package
-```
-
-File WAR sẽ được tạo tại: `target/EDMOET-1.0.0.war`
-
-### Deploy WAR File lên Tomcat
-
-1. Copy file `EDMOET-1.0.0.war` vào thư mục `webapps` của Tomcat
-2. Khởi động Tomcat
-3. Truy cập: `http://localhost:8080/EDMOET-1.0.0`
+### Deploy AWS :
+http://edumoet.ap-southeast-1.elasticbeanstalk.com
 
 ---
 
@@ -396,24 +385,14 @@ Dự án này được phân phối dưới giấy phép MIT. Xem file `LICENSE`
 
 **Nhóm Phát Triển EDMOET**
 
-- GitHub: [@your-username](https://github.com/your-username)
-- Email: contact@edumoet.com
+- GitHub: https://github.com/hoangphuc2k5/DOAN_LTW.git
+- Email: 23110287@student.hcmute.edu.vn
 
 ---
 
 ## 🙏 Lời Cảm Ơn
 
-- Cảm ơn Spring Boot community
-- Cảm ơn tất cả contributors
-- Cảm ơn những người dùng đã đóng góp phản hồi
-
----
-
-## 📞 Liên Hệ & Hỗ Trợ
-
-- **Issues**: [GitHub Issues](https://github.com/your-username/EDMOET/issues)
-- **Email**: support@edumoet.com
-- **Documentation**: [Wiki](https://github.com/your-username/EDMOET/wiki)
+- Cảm ơn Thầy Nguyễn Hữu Trung đã giúp tụi em học được nhiều thứ mới mẻ và nhiều bài học hay ạ
 
 ---
 
