@@ -43,14 +43,10 @@ public class User {
 
     @NotBlank
     @Size(min = 6)
-    @Column(nullable = false, columnDefinition = "NVARCHAR(255)")
+    @Column(nullable = false)
     private String password;
 
-<<<<<<< HEAD
-    @Column(name = "profile_image", columnDefinition = "NVARCHAR(MAX)")
-=======
-    @Column(name = "profile_image", columnDefinition = "NVARCHAR(250)")
->>>>>>> 1370639 ( Done 1.2)
+    @Column(name = "profile_image")
     private String profileImage;
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
@@ -59,18 +55,6 @@ public class User {
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String bio;
 
-<<<<<<< HEAD
-    @Column(columnDefinition = "NVARCHAR(MAX)")
-    private String location;
-
-    @Column(columnDefinition = "NVARCHAR(MAX)")
-    private String website;
-
-    @Column(columnDefinition = "NVARCHAR(MAX)")
-    private String githubUrl;
-
-    @Column(columnDefinition = "NVARCHAR(MAX)")
-=======
     @Column(columnDefinition = "NVARCHAR(250)")
     private String location;
 
@@ -81,10 +65,9 @@ public class User {
     private String githubUrl;
 
     @Column(columnDefinition = "NVARCHAR(250)")
->>>>>>> 1370639 ( Done 1.2)
     private String linkedinUrl;
 
-    @Column(nullable = false, columnDefinition = "NVARCHAR(50)")
+    @Column(nullable = false)
     private String role = "USER";
 
     @Column(nullable = false)
@@ -143,7 +126,6 @@ public class User {
     @Column(nullable = false)
     private Boolean twoFactorEnabled = false;
 
-    @Column(columnDefinition = "NVARCHAR(250)")
     private String twoFactorSecret;
 
     @ManyToMany

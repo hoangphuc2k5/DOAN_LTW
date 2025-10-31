@@ -27,11 +27,7 @@ public class Tag {
     private Long id;
 
     @NotBlank
-<<<<<<< HEAD
-    @Column(unique = true, nullable = false, columnDefinition = "NVARCHAR(MAX)")
-=======
     @Column(unique = true, nullable = false, columnDefinition = "NVARCHAR(250)")
->>>>>>> 1370639 ( Done 1.2)
     private String name;
 
     @Column(columnDefinition = "NVARCHAR(MAX)")

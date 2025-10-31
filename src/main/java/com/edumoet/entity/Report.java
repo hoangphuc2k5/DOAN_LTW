@@ -27,32 +27,20 @@ public class Report {
     @JoinColumn(name = "reporter_id", nullable = false)
     private User reporter;
 
-<<<<<<< HEAD
-    @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
-=======
-    @Column(nullable = false, columnDefinition = "NVARCHAR(50)")
->>>>>>> 1370639 ( Done 1.2)
+    @Column(nullable = false)
     private String entityType; // QUESTION, ANSWER, COMMENT, USER
 
     @Column(nullable = false)
     private Long entityId;
 
     @NotBlank
-<<<<<<< HEAD
-    @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
-=======
     @Column(nullable = false, columnDefinition = "NVARCHAR(250)")
->>>>>>> 1370639 ( Done 1.2)
     private String reason; // SPAM, OFFENSIVE, INAPPROPRIATE, OTHER
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String description;
 
-<<<<<<< HEAD
-    @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
-=======
-    @Column(nullable = false, columnDefinition = "NVARCHAR(50)")
->>>>>>> 1370639 ( Done 1.2)
+    @Column(nullable = false)
     private String status = "PENDING"; // PENDING, REVIEWED, RESOLVED, DISMISSED
 
     @ManyToOne(fetch = FetchType.LAZY)

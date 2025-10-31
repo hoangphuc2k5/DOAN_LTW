@@ -21,11 +21,7 @@ public class ChatbotConversation {
     @JoinColumn(name = "user_id")
     private User user;
     
-<<<<<<< HEAD
-    @Column(name = "session_id", unique = true, nullable = false, columnDefinition = "NVARCHAR(MAX)")
-=======
     @Column(name = "session_id", unique = true, nullable = false, columnDefinition = "NVARCHAR(250)")
->>>>>>> 1370639 ( Done 1.2)
     private String sessionId;
     
     @Column(name = "started_at", nullable = false)
@@ -37,15 +33,9 @@ public class ChatbotConversation {
     @Column(name = "is_active")
     private boolean isActive;
     
-<<<<<<< HEAD
-    @Column(name = "user_ip", columnDefinition = "NVARCHAR(MAX)")
-    private String userIp;
-
-=======
     @Column(name = "user_ip", columnDefinition = "NVARCHAR(45)")
     private String userIp;
     
->>>>>>> 1370639 ( Done 1.2)
     @Column(name = "user_agent", columnDefinition = "NVARCHAR(MAX)")
     private String userAgent;
     

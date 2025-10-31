@@ -31,11 +31,7 @@ public class Notification {
     @Column(columnDefinition = "NVARCHAR(MAX)", nullable = false)
     private String message;
 
-<<<<<<< HEAD
-    @Column(columnDefinition = "NVARCHAR(MAX)")
-=======
     @Column(columnDefinition = "NVARCHAR(500)")
->>>>>>> 1370639 ( Done 1.2)
     private String link;
 
     @Column(nullable = false)
