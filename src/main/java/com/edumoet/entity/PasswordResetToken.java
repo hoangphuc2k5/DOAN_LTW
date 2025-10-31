@@ -20,10 +20,10 @@ public class PasswordResetToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(250)")
     private String email;
 
-    @Column(name = "otp_code", nullable = false, length = 6)
+    @Column(name = "otp_code", nullable = false, length = 6, columnDefinition = "NVARCHAR(6)")
     private String otpCode;
 
     @Column(name = "created_at", nullable = false)

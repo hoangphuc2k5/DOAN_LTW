@@ -239,87 +239,181 @@
 let cropper = null;
 let selectedFile = null;
 
+console.log('🔄 Admin User Edit - Avatar Upload Script Loading...');
+console.log('✅ Cropper.js loaded:', typeof Cropper !== 'undefined');
+console.log('✅ Bootstrap loaded:', typeof bootstrap !== 'undefined');
+
 function handleImageSelect(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+    console.log('\n=== [HANDLE IMAGE SELECT] ===');
+    console.log('Event:', event);
+    console.log('Files:', event.target.files);
     
-    if (!file.type.startsWith('image/')) {
-        alert('Vui lòng chọn file ảnh!');
+    const file = event.target.files[0];
+    if (!file) {
+        console.log('❌ No file selected');
         return;
     }
     
-    if (file.size > 5 * 1024 * 1024) {
-        alert('Kích thước file quá lớn! Vui lòng chọn file nhỏ hơn 5MB.');
+    console.log('📁 File info:', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+    });
+    
+    if (!file.type.startsWith('image/')) {
+        alert('⚠️ Vui lòng chọn file ảnh!');
+        event.target.value = '';
+        return;
+    }
+    
+    // Validate file size (max 10MB for cropping, will be compressed after)
+    if (file.size > 10 * 1024 * 1024) {
+        alert('⚠️ File quá lớn! Vui lòng chọn file nhỏ hơn 10MB.');
+        event.target.value = '';
         return;
     }
     
     selectedFile = file;
+    console.log('✅ File validation passed');
+    
     const reader = new FileReader();
     
     reader.onload = function(e) {
+        console.log('📸 File loaded, showing modal...');
+        
         const cropperImage = document.getElementById('cropperImage');
+        console.log('Image element:', cropperImage);
         cropperImage.src = e.target.result;
         
         // Show modal
-        const modal = new bootstrap.Modal(document.getElementById('imageCropModal'));
+        const modalElement = document.getElementById('imageCropModal');
+        console.log('Modal element:', modalElement);
+        
+        const modal = new bootstrap.Modal(modalElement);
+        console.log('Bootstrap Modal instance created');
         modal.show();
+        console.log('✅ Modal.show() called');
         
         // Initialize cropper when modal is shown
-        document.getElementById('imageCropModal').addEventListener('shown.bs.modal', function () {
+        modalElement.addEventListener('shown.bs.modal', function () {
+            console.log('🎯 Modal shown event fired');
+            
             if (cropper) {
+                console.log('Destroying old cropper instance');
                 cropper.destroy();
             }
             
+            console.log('Creating new Cropper instance...');
             cropper = new Cropper(cropperImage, {
-                aspectRatio: 1,
-                viewMode: 1,
+                aspectRatio: 1, // Square crop
+                viewMode: 2,
                 dragMode: 'move',
-                autoCropArea: 1,
+                autoCropArea: 0.8,
                 restore: false,
                 guides: true,
                 center: true,
-                highlight: false,
+                highlight: true,
                 cropBoxMovable: true,
                 cropBoxResizable: true,
                 toggleDragModeOnDblclick: false,
+                minContainerWidth: 300,
+                minContainerHeight: 300,
+                minCropBoxWidth: 150,
+                minCropBoxHeight: 150,
             });
-        }, {once: true});
+            console.log('✅ Cropper instance created:', cropper);
+        }, { once: true });
     };
     
+    reader.onerror = function() {
+        console.error('❌ Error reading file');
+        alert('❌ Lỗi khi đọc file!');
+    };
+    
+    console.log('📖 Reading file as DataURL...');
     reader.readAsDataURL(file);
 }
 
 function cropImage() {
     if (!cropper) {
-        alert('Không có ảnh để cắt!');
+        alert('❌ Không có ảnh để cắt!');
         return;
     }
     
+    console.log('✂️ [CROP IMAGE] Starting crop process...');
+    
     // Get cropped canvas
     const canvas = cropper.getCroppedCanvas({
-        width: 300,
-        height: 300,
+        width: 400,
+        height: 400,
         imageSmoothingEnabled: true,
-        imageSmoothingQuality: 'high',
+        imageSmoothingQuality: 'high'
     });
+    
+    if (!canvas) {
+        alert('❌ Không thể cắt ảnh!');
+        return;
+    }
+    
+    console.log('✅ [CROP IMAGE] Canvas created, converting to blob...');
     
     // Convert to blob and then to base64
     canvas.toBlob(function(blob) {
+        if (!blob) {
+            alert('❌ Không thể xử lý ảnh!');
+            return;
+        }
+        
+        console.log('✅ [CROP IMAGE] Blob created, size: ' + blob.size);
+        
+        // Validate final size (max 5MB)
+        if (blob.size > 5 * 1024 * 1024) {
+            alert('⚠️ Ảnh sau khi cắt quá lớn! Vui lòng chọn vùng nhỏ hơn.');
+            return;
+        }
+        
         const reader = new FileReader();
         reader.onloadend = function() {
             const base64data = reader.result;
+            console.log('✅ [CROP IMAGE] Base64 data created, length: ' + base64data.length);
             
             // Set to hidden input
-            document.getElementById('croppedImageData').value = base64data;
+            const croppedInput = document.getElementById('croppedImageData');
+            if (croppedInput) {
+                croppedInput.value = base64data;
+                console.log('✅ [CROP IMAGE] Set to croppedImageData input');
+            } else {
+                console.error('❌ [CROP IMAGE] croppedImageData input not found!');
+            }
             
             // Update preview
-            document.getElementById('profilePreview').src = base64data;
+            const preview = document.getElementById('profilePreview');
+            if (preview) {
+                preview.src = base64data;
+                preview.className = 'rounded-circle border border-3 border-success';
+                console.log('✅ [CROP IMAGE] Preview updated');
+            }
             
             // Close modal
-            bootstrap.Modal.getInstance(document.getElementById('imageCropModal')).hide();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('imageCropModal'));
+            if (modal) {
+                modal.hide();
+                console.log('✅ [CROP IMAGE] Modal closed');
+            }
+            
+            // Destroy cropper
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+                console.log('✅ [CROP IMAGE] Cropper destroyed');
+            }
             
             // Show toast notification
-            showToast('Ảnh đã được cắt! Nhấn "Lưu Thay Đổi" để cập nhật.', 'success');
+            showToast('✅ Ảnh đã được cắt! Nhấn "Lưu Thay Đổi" để upload lên S3.', 'success');
+        };
+        reader.onerror = function() {
+            console.error('❌ [CROP IMAGE] Error reading blob');
+            alert('❌ Lỗi khi xử lý ảnh!');
         };
         reader.readAsDataURL(blob);
     }, 'image/jpeg', 0.9);
@@ -341,6 +435,24 @@ function showToast(message, type = 'info') {
         alert.remove();
     }, 3000);
 }
+
+// Clean up on modal close
+document.getElementById('imageCropModal').addEventListener('hidden.bs.modal', function () {
+    console.log('🔄 [MODAL CLOSED] Cleaning up...');
+    if (cropper) {
+        cropper.destroy();
+        cropper = null;
+        console.log('✅ Cropper destroyed');
+    }
+    // Clear the file input
+    const fileInput = document.getElementById('profilePictureInput');
+    if (fileInput) {
+        fileInput.value = '';
+        console.log('✅ File input cleared');
+    }
+});
+
+console.log('✅ Admin User Edit Avatar Script Loaded');
 </script>
 </th:block>
 </body>

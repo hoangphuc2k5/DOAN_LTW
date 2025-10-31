@@ -32,7 +32,11 @@ public class Question {
 
     @NotBlank
     @Size(max = 200)
+<<<<<<< HEAD
     @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
+=======
+    @Column(nullable = false, columnDefinition = "NVARCHAR(250)")
+>>>>>>> 1370639 ( Done 1.2)
     private String title;
 
     @NotBlank

@@ -29,13 +29,21 @@ public class ChatbotMessage {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     
+<<<<<<< HEAD
     @Column(name = "intent", columnDefinition = "NVARCHAR(MAX)")
+=======
+    @Column(name = "intent", columnDefinition = "NVARCHAR(250)")
+>>>>>>> 1370639 ( Done 1.2)
     private String intent; // Loại câu hỏi: greeting, question_how_to, question_about, etc.
     
     @Column(name = "confidence")
     private Double confidence; // Độ tự tin của bot trong câu trả lời (0-1)
     
+<<<<<<< HEAD
     @Column(name = "response_type", columnDefinition = "NVARCHAR(MAX)")
+=======
+    @Column(name = "response_type", columnDefinition = "NVARCHAR(250)")
+>>>>>>> 1370639 ( Done 1.2)
     private String responseType; // pattern_match, openai, manual, fallback
     
     @Column(name = "processing_time_ms")

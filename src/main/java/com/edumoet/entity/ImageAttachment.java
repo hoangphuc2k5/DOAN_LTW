@@ -21,10 +21,17 @@ public class ImageAttachment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+<<<<<<< HEAD
     @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String fileName;
     
     @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
+=======
+    @Column(nullable = false, columnDefinition = "NVARCHAR(250)")
+    private String fileName;
+    
+    @Column(nullable = false, columnDefinition = "NVARCHAR(100)")
+>>>>>>> 1370639 ( Done 1.2)
     private String contentType;
     
     @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")

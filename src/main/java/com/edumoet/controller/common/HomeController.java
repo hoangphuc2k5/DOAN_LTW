@@ -74,6 +74,17 @@ public class HomeController {
                 questionService.getPublicQuestions(pageable);
         }
         
+        // Debug: Log avatar URLs for first few questions
+        questions.getContent().stream().limit(3).forEach(q -> {
+            if (q.getAuthor() != null) {
+                String avatarUrl = resolveAvatarUrl(q.getAuthor().getProfileImage(), q.getAuthor().getUsername(), 24);
+                System.out.println("🔍 [HOME] Question: " + q.getTitle() 
+                    + " | Author: " + q.getAuthor().getUsername()
+                    + " | profileImage: " + q.getAuthor().getProfileImage() 
+                    + " | resolved URL: " + avatarUrl);
+            }
+        });
+        
         model.addAttribute("questions", questions);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", questions.getTotalPages());

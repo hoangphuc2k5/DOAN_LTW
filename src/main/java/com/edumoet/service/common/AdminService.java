@@ -319,18 +319,30 @@ public class AdminService {
      */
     @Transactional
     public void updateUserAvatar(Long userId, String base64ImageData) {
+        System.out.println("📤 [ADMIN UPDATE AVATAR] Starting update for user ID: " + userId);
+        System.out.println("   Base64 data length: " + (base64ImageData != null ? base64ImageData.length() : 0));
+        
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
+        System.out.println("   User: " + user.getUsername());
+        System.out.println("   Current profileImage: " + user.getProfileImage());
+        
         // Delete old avatar if exists
         if (user.getProfileImage() != null && !user.getProfileImage().isEmpty()) {
+            System.out.println("🗑️ [ADMIN UPDATE AVATAR] Deleting old avatar: " + user.getProfileImage());
             imageService.deleteAvatar(user.getProfileImage());
         }
         
         // Save new avatar
-        String filename = imageService.saveAvatarFromBase64(base64ImageData, "avatar_" + userId);
+        System.out.println("📤 [ADMIN UPDATE AVATAR] Saving new avatar...");
+        String filename = imageService.saveAvatarFromBase64(base64ImageData, "user" + userId);
+        System.out.println("✅ [ADMIN UPDATE AVATAR] New filename: " + filename);
+        
         user.setProfileImage(filename);
         userRepository.save(user);
+        
+        System.out.println("✅ [ADMIN UPDATE AVATAR] Avatar updated successfully!");
     }
     
     /**

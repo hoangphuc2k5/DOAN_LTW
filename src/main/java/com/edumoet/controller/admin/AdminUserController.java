@@ -106,7 +106,15 @@ public class AdminUserController {
             userMap.put("role", user.getRole());
             userMap.put("isBanned", user.getIsBanned());
             userMap.put("createdAt", user.getCreatedAt());
+<<<<<<< HEAD
             userMap.put("avatarUrl", resolveAvatarUrl(user.getProfileImage(), user.getUsername(), 32));
+=======
+            String avatarUrl = resolveAvatarUrl(user.getProfileImage(), user.getUsername(), 32);
+            userMap.put("avatarUrl", avatarUrl);
+            System.out.println("🔍 [ADMIN USERS] User: " + user.getUsername() 
+                + " | profileImage: " + user.getProfileImage() 
+                + " | resolved URL: " + avatarUrl);
+>>>>>>> 1370639 ( Done 1.2)
             return userMap;
         }).toList();
         
@@ -197,14 +205,23 @@ public class AdminUserController {
             user.setAbout(about);
             
             // Handle avatar upload (cropped image)
-            if (croppedImageData != null && !croppedImageData.isEmpty()) {
+            System.out.println("📤 [ADMIN EDIT] Checking for avatar upload...");
+            System.out.println("   croppedImageData: " + (croppedImageData != null ? "NOT NULL (length: " + croppedImageData.length() + ")" : "NULL"));
+            
+            if (croppedImageData != null && !croppedImageData.trim().isEmpty()) {
                 try {
+                    System.out.println("✅ [ADMIN EDIT] Avatar data found, updating...");
                     adminService.updateUserAvatar(id, croppedImageData);
+                    System.out.println("✅ [ADMIN EDIT] Avatar updated successfully!");
                 } catch (Exception e) {
+                    System.err.println("❌ [ADMIN EDIT] Error uploading avatar: " + e.getMessage());
+                    e.printStackTrace();
                     redirectAttributes.addFlashAttribute("errorMessage", 
                         "Lỗi khi upload avatar: " + e.getMessage());
                     return "redirect:/admin/users/" + id + "/edit";
                 }
+            } else {
+                System.out.println("ℹ️ [ADMIN EDIT] No avatar data to upload");
             }
             
             adminService.updateUser(user);

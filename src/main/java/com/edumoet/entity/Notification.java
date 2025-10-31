@@ -25,13 +25,17 @@ public class Notification {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(250)")
     private String type; // SYSTEM, COMMENT, ANSWER, VOTE, MESSAGE, EVENT
 
     @Column(columnDefinition = "NVARCHAR(MAX)", nullable = false)
     private String message;
 
+<<<<<<< HEAD
     @Column(columnDefinition = "NVARCHAR(MAX)")
+=======
+    @Column(columnDefinition = "NVARCHAR(500)")
+>>>>>>> 1370639 ( Done 1.2)
     private String link;
 
     @Column(nullable = false)
