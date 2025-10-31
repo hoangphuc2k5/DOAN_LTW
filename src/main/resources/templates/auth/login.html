@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Log In</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+    <div class="container">
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-5">
+                <div class="text-center mb-4">
+                    <h1 class="h3"><i class="bi bi-stack-overflow"></i> Stack Overflow Clone</h1>
+                </div>
+                
+                <div class="card shadow">
+                    <div class="card-body p-5">
+                        <h2 class="card-title text-center mb-4">Log In</h2>
+                        
+                        <div th:if="${param.error}" class="alert alert-danger" role="alert">
+                            <i class="bi bi-exclamation-triangle"></i> Sai tên đăng nhập hoặc mật khẩu!
+                        </div>
+                        
+                        <div th:if="${param.logout}" class="alert alert-success" role="alert">
+                            <i class="bi bi-check-circle"></i> Đăng xuất thành công!
+                        </div>
+                        
+                        <div th:if="${param.registered}" class="alert alert-success" role="alert">
+                            <i class="bi bi-check-circle"></i> Đăng ký thành công! Vui lòng đăng nhập.
+                        </div>
+                        
+                        <form th:action="@{/login}" method="post">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username or Email</label>
+                                <input type="text" class="form-control" id="username" name="username" required autofocus>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-box-arrow-in-right"></i> Log In
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <hr class="my-4">
+                        
+                        <p class="text-center mb-0">
+                            Don't have an account? 
+                            <a th:href="@{/register}" class="text-decoration-none">Sign up</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

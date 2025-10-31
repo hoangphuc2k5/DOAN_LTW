@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head><title th:text="${pageTitle}">Report Content</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="container mt-4">
+        <h2><i class="bi bi-flag"></i> Report Content</h2>
+        
+        <div class="card shadow">
+            <div class="card-body">
+                <form th:action="@{/reports/create}" method="post">
+                    <input type="hidden" name="entityType" th:value="${entityType}">
+                    <input type="hidden" name="entityId" th:value="${entityId}">
+                    
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Report Guidelines:</strong>
+                        <ul class="mb-0">
+                            <li>Only report content that violates community guidelines</li>
+                            <li>Provide detailed information to help moderators</li>
+                            <li>False reports may result in penalties</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Reason for Report: *</label>
+                        <select name="reason" class="form-select" required>
+                            <option value="">-- Select a reason --</option>
+                            <option value="spam">Spam or Advertisement</option>
+                            <option value="offensive">Offensive or Abusive</option>
+                            <option value="inappropriate">Inappropriate Content</option>
+                            <option value="copyright">Copyright Violation</option>
+                            <option value="misleading">Misleading or False Information</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Description: *</label>
+                        <textarea name="description" class="form-control" rows="5" 
+                                  placeholder="Please provide details about why you're reporting this content..." required></textarea>
+                        <div class="form-text">Be specific and provide examples if possible.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Reporting:</strong> 
+                        <span th:text="${entityType} + ' #' + ${entityId}"></span>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-flag"></i> Submit Report
+                    </button>
+                    <a th:href="@{/}" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${pageTitle}">Tin nhắn</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+
+    <!-- Only include CSRF meta tags if Spring Security provided _csrf in request -->
+    <meta th:if="${_csrf != null}" name="_csrf" th:content="${_csrf.token}"/>
+    <meta th:if="${_csrf != null}" name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+    <link rel="stylesheet" href="/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/css/chat.css"/>
+</head>
+<body th:attr="data-current-user=${currentUser.username}">
+<div class="app-shell">
+    <header class="app-header">
+        <div class="brand">Message</div>
+        <div class="header-actions">
+            <button id="btnNewChat" class="btn btn-primary btn-sm">Soạn tin mới</button>
+        </div>
+    </header>
+
+    <main class="app-main">
+        <!-- LEFT -->
+        <aside class="col-left">
+            <div class="left-top">
+                <input id="leftSearch" class="form-control left-search" placeholder="Tìm kiếm..."/>
+            </div>
+            <div id="conversationsList" class="conversations-list" role="list">
+                <!-- Server side initial render simplified -->
+                <div th:each="c : ${conversations}" class="conv-item" role="listitem"
+                     th:attr="data-username=${c.username},data-display=${c.displayName},data-avatar=${c.avatar}">
+                    <img th:src="${c.avatar}" alt="avatar" class="conv-avatar"/>
+                    <div class="conv-main">
+                        <div class="conv-row">
+                            <div class="conv-name" th:text="${c.displayName}">Username</div>
+                            <div class="conv-time" th:if="${c.lastTimestamp != null}" th:text="${#temporals.format(c.lastTimestamp,'HH:mm')}">12:34</div>
+                        </div>
+                        <div class="conv-row conv-sub">
+                            <div class="conv-preview" th:text="${c.lastMessage}">Tin nhắn...</div>
+                            <div th:if="${c.unread != null and c.unread > 0}" class="conv-unread" th:text="${c.unread}">3</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="conv-empty" th:if="${conversations.empty}">Chưa có cuộc trò chuyện</div>
+            </div>
+        </aside>
+
+        <!-- CENTER -->
+        <section class="col-center">
+            <div id="chatPlaceholder" class="chat-empty">
+                <div>
+                    <h4>Chọn cuộc trò chuyện hoặc bấm "Soạn tin mới"</h4>
+                    <p class="text-muted">Giao diện chat sẽ hiển thị ở đây.</p>
+                </div>
+            </div>
+
+            <div id="chatPanel" class="chat-panel d-none" aria-live="polite">
+                <div class="chat-header">
+                    <div class="partner-left">
+                        <img id="partnerAvatar" class="partner-avatar" src="/images/default-avatar.png" alt="avatar"/>
+                    </div>
+                    <div class="partner-info">
+                        <div id="partnerName" class="partner-name">Tên người</div>
+                        <div id="partnerStatus" class="partner-status">Online</div>
+                    </div>
+                    <div class="chat-header-actions">
+                        <button id="btnOpenRight" class="btn btn-light btn-sm">Thông tin</button>
+                    </div>
+                </div>
+
+                <div id="chatMessages" class="chat-messages" role="log" aria-live="polite"></div>
+
+                <div class="chat-composer">
+                    <div class="composer-left">
+                        <button id="btnEmoji" class="btn-tool" title="Emoji">😊</button>
+                        <button id="btnAttach" class="btn-tool" title="Đính kèm">📎</button>
+                        <input type="file" id="fileInput" style="display:none" multiple/>
+                    </div>
+                    <textarea id="messageInput" class="composer-input" placeholder="Nhập tin nhắn..." rows="1"></textarea>
+                    <button id="sendMessageBtn" class="btn btn-primary composer-send">Gửi</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT -->
+        <aside id="colRight" class="col-right d-none">
+            <div class="contact-panel">
+                <div class="contact-top">
+                    <img id="infoAvatar" class="info-avatar" src="/images/default-avatar.png" alt="avatar"/>
+                    <div class="info-name" id="infoName">Tên người</div>
+                    <div class="info-username" id="infoUsername">@user</div>
+                </div>
+                <div class="contact-actions mt-2">
+                    <button id="btnRecall" class="btn btn-outline-secondary w-100 btn-sm">Thu hồi tin đã gửi</button>
+                    <button id="btnClear" class="btn btn-outline-danger w-100 btn-sm mt-2">Xóa trò chuyện (local)</button>
+                </div>
+                <div class="contact-more mt-3">
+                    <h6>Thông tin</h6>
+                    <div id="infoExtra" class="text-muted small">Không có thông tin</div>
+                </div>
+            </div>
+        </aside>
+    </main>
+</div>
+
+<!-- new chat drawer -->
+<div id="newChatDrawer" class="new-chat-drawer d-none">
+    <div class="drawer-header">
+        <strong>Soạn tin mới</strong>
+        <button id="drawerClose" class="btn-close"></button>
+    </div>
+    <div class="drawer-body">
+        <label for="newChatUsername">Người nhận</label>
+        <input id="newChatUsername" class="form-control" placeholder="Nhập username..."/>
+        <div class="mt-3">
+            <button id="startChatBtn" class="btn btn-primary w-100">Bắt đầu</button>
+        </div>
+    </div>
+</div>
+
+<script src="/js/sockjs.min.js"></script>
+<script src="/js/stomp.min.js"></script>
+<script src="/js/chat-attachments.js"></script>
+</body>
+</html>

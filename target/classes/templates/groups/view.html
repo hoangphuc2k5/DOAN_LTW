@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="${group.name}">Group Name</title>
+    <style>
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin: 10px;
+        }
+        .preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container">
+            <!-- Group Header -->
+            <div class="row mb-4">
+                <div class="col">
+                    <h2 th:text="${group.name}">Group Name</h2>
+                    <p class="text-muted" th:text="${group.description}">Description</p>
+                </div>
+                <div class="col text-end" th:if="${isCreator}">
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#inviteMemberModal">
+                        Invite Members
+                    </button>
+                </div>
+            </div>
+
+            <!-- New Post Form -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form th:action="@{'/api/questions'}" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="groupId" th:value="${group.id}">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="body" class="form-label">Content</label>
+                            <textarea class="form-control" id="body" name="body" rows="4" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="images" class="form-label">Images</label>
+                            <input type="file" class="form-control" id="images" name="images" multiple accept="image/*" onchange="previewImages(event)">
+                            <div id="imagePreviewContainer" class="preview-container"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="tags" class="form-label">Tags</label>
+                            <input type="text" class="form-control" id="tags" name="tags" placeholder="Separate tags with commas">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Post</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Group Posts -->
+            <div class="posts-container">
+                <div class="card mb-3" th:each="question : ${questions}">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <a th:href="@{'/questions/' + ${question.id}}" th:text="${question.title}">Question Title</a>
+                        </h5>
+                        <p class="card-text" th:text="${#strings.abbreviate(question.body, 200)}">Question content...</p>
+                        <!-- Image attachments -->
+                        <div class="image-gallery" th:if="${!question.images.empty}">
+                            <div class="d-flex flex-wrap gap-2">
+                                <img th:each="image : ${question.images}" 
+                                     th:src="@{'/api/images/' + ${image.id}}"
+                                     class="img-thumbnail" 
+                                     style="max-width: 150px;">
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="user-info">
+                                <small class="text-muted">
+                                    Posted by <span th:text="${question.author.username}">username</span>
+                                    on <span th:text="${#temporals.format(question.createdAt, 'dd MMM yyyy')}">date</span>
+                                </small>
+                            </div>
+                            <div class="post-stats">
+                                <span class="badge bg-secondary me-2" th:text="${question.votes + ' votes'}">0 votes</span>
+                                <span class="badge bg-secondary" th:text="${question.answerCount + ' answers'}">0 answers</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invite Member Modal -->
+        <div class="modal fade" id="inviteMemberModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Invite Members</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="userSearch" placeholder="Search users...">
+                        </div>
+                        <div id="userSearchResults"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block layout:fragment="scripts">
+        <script th:inline="javascript">
+            /* Global variables */
+            const groupId = /*[[${group.id}]]*/ null;
+            
+            // Image preview functionality
+            function previewImages(event) {
+                const container = document.getElementById('imagePreviewContainer');
+                container.innerHTML = '';
+                const files = event.target.files;
+
+                for (let file of files) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'image-preview';
+                        container.appendChild(img);
+                    }
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            // WebSocket connection for real-time updates
+            const socket = new SockJS('/ws');
+            const stompClient = Stomp.over(socket);
+            
+            stompClient.connect({}, function(frame) {
+                stompClient.subscribe('/topic/group.' + groupId, function(message) {
+                    // Handle new posts and updates
+                    const update = JSON.parse(message.body);
+                    handleGroupUpdate(update);
+                });
+            });
+
+            function handleGroupUpdate(update) {
+                if (update.type === 'NEW_POST') {
+                    // Prepend new post to the posts container
+                    prependNewPost(update.data);
+                }
+            }
+
+            // User search functionality
+            const userSearchInput = document.getElementById('userSearch');
+            const userSearchResults = document.getElementById('userSearchResults');
+
+            userSearchInput.addEventListener('input', debounce(searchUsers, 300));
+
+            function searchUsers() {
+                const query = userSearchInput.value;
+                if (query.length < 2) return;
+
+                fetch(`/api/users/search?q=${query}`)
+                    .then(response => response.json())
+                    .then(users => {
+                        displayUserSearchResults(users);
+                    });
+            }
+
+            function displayUserSearchResults(users) {
+                userSearchResults.innerHTML = users.map(user => `
+                    <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                        <span>${user.username}</span>
+                        <button onclick="inviteUser(${user.id})" class="btn btn-sm btn-primary">
+                            Invite
+                        </button>
+                    </div>
+                `).join('');
+            }
+
+            function inviteUser(userId) {
+                fetch(`/api/groups/${groupId}/members/${userId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        showNotification('User invited successfully');
+                    } else {
+                        showNotification('Failed to invite user', 'error');
+                    }
+                });
+            }
+
+            function debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+        </script>
+    </th:block>
+</body>
+</html>

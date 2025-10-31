@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head><title th:text="${pageTitle}">Edit Profile</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="container mt-4">
+        <h2><i class="bi bi-person-gear"></i> Edit Profile</h2>
+
+        <!-- Alerts -->
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show">
+            <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-body">
+                <form th:action="@{/profile/update}" method="post">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Username:</label>
+                                <input type="text" class="form-control" th:value="${user.username}" disabled>
+                                <small class="text-muted">Username cannot be changed</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Email: *</label>
+                                <input type="email" name="email" class="form-control" 
+                                       th:value="${user.email}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Bio:</label>
+                        <textarea name="bio" class="form-control" rows="4" 
+                                  placeholder="Tell us about yourself..." th:text="${user.bio}"></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Location:</label>
+                                <input type="text" name="location" class="form-control" 
+                                       th:value="${user.location}" placeholder="City, Country">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Website:</label>
+                                <input type="url" name="website" class="form-control" 
+                                       th:value="${user.website}" placeholder="https://yourwebsite.com">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">GitHub URL:</label>
+                                <input type="url" name="githubUrl" class="form-control" 
+                                       th:value="${user.githubUrl}" placeholder="https://github.com/username">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">LinkedIn URL:</label>
+                                <input type="url" name="linkedinUrl" class="form-control" 
+                                       th:value="${user.linkedinUrl}" placeholder="https://linkedin.com/in/username">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Save Changes
+                    </button>
+                    <a th:href="@{/profile}" class="btn btn-secondary">Cancel</a>
+                    <a th:href="@{/profile/change-password}" class="btn btn-warning float-end">
+                        <i class="bi bi-key"></i> Change Password
+                    </a>
+                </form>
+            </div>
+        </div>
+
+        <!-- Profile Stats -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5><i class="bi bi-bar-chart"></i> Your Stats</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h3 th:text="${user.points}">0</h3>
+                        <p class="text-muted">Points</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 th:text="${user.level}">1</h3>
+                        <p class="text-muted">Level</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 th:text="${user.badges != null ? user.badges.size() : 0}">0</h3>
+                        <p class="text-muted">Badges</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 class="text-success" th:if="${user.isActive}">Active</h3>
+                        <h3 class="text-danger" th:unless="${user.isActive}">Inactive</h3>
+                        <p class="text-muted">Status</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+

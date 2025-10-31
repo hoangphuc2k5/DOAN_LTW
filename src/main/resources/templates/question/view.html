@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title th:text="${pageTitle}">Question</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Moderation Alert -->
+    <div class="alert alert-warning" th:if="${!question.isApproved}">
+        <i class="bi bi-hourglass-split"></i> 
+        <strong>Câu hỏi đang chờ kiểm duyệt</strong> - Câu hỏi này sẽ chỉ hiển thị công khai sau khi được quản trị viên phê duyệt.
+    </div>
+    
+    <!-- Question -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-1 text-center">
+                    <!-- Vote buttons -->
+                    <button class="btn btn-outline-secondary btn-sm mb-2 vote-btn" 
+                            th:attr="data-id=${question.id}, data-type='question', data-action='upvote'" 
+                            sec:authorize="isAuthenticated()">
+                        <i class="bi bi-caret-up-fill"></i>
+                    </button>
+                    <div class="h4 mb-2" th:text="${question.votes}">0</div>
+                    <button class="btn btn-outline-secondary btn-sm" 
+                            th:attr="data-id=${question.id}, data-type='question', data-action='downvote'" 
+                            sec:authorize="isAuthenticated()">
+                        <i class="bi bi-caret-down-fill"></i>
+                    </button>
+                </div>
+                <div class="col-md-11">
+                    <h2 th:text="${question.title}">Question Title</h2>
+                    <div class="mb-3 text-muted small">
+                        Đăng lúc <span th:text="${#temporals.format(question.createdAt, 'dd/MM/yyyy HH:mm')}">date</span>
+                        | Đã xem <span th:text="${question.views}">0</span> lần
+                    </div>
+                    <div class="mb-3" th:utext="${question.body}">Question body</div>
+                    
+                    <!-- Image Gallery -->
+                    <div class="mb-3" th:if="${not #lists.isEmpty(question.images)}">
+                        <div class="image-gallery">
+                            <div class="row g-2">
+                                <div class="col-md-3 col-sm-4 col-6" th:each="image : ${question.images}">
+                                    <div class="image-container">
+                                        <img th:src="@{'/api/images/' + ${image.id}}"
+                                             class="img-fluid rounded cursor-pointer"
+                                             th:onclick="'showImage(\'' + ${image.id} + '\')'">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <span th:each="tag : ${question.tags}" class="badge bg-secondary me-1" th:text="${tag.name}">tag</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="btn-group" role="group" 
+                                 th:if="${#authentication.principal != null && question.author.username == #authentication.principal.username}">
+                                <a th:href="@{/questions/{id}/edit(id=${question.id})}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i> Sửa
+                                </a>
+                                <form th:action="@{/questions/{id}/delete(id=${question.id})}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                            onclick="return confirm('Bạn có chắc muốn xóa câu hỏi này?')">
+                                        <i class="bi bi-trash"></i> Xóa
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card bg-light">
+                            <div class="card-body p-2">
+                                <small class="text-muted">hỏi lúc <span th:text="${#temporals.format(question.createdAt, 'dd/MM/yyyy HH:mm')}">date</span></small>
+                                <div class="d-flex align-items-center mt-2">
+                                    <div class="me-2">
+                                        <i class="bi bi-person-circle fs-3"></i>
+                                    </div>
+                                    <div>
+                                        <a th:href="@{/users/{id}(id=${question.author.id})}" th:text="${question.author.username}">username</a>
+                                        <div class="small text-muted">
+                                            <i class="bi bi-star-fill text-warning"></i> <span th:text="${question.author.reputation}">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Answers -->
+    <h3 class="mb-3"><span th:text="${answers.size()}">0</span> Câu Trả Lời</h3>
+    
+    <div th:each="answer : ${answers}" class="card mb-3">
+        <div class="card-body" th:classappend="${answer.isAccepted ? 'border-success border-3' : ''}">
+            <div class="row">
+                <div class="col-md-1 text-center">
+                    <button class="btn btn-outline-secondary btn-sm mb-2 vote-btn" 
+                            th:attr="data-id=${answer.id}, data-type='answer', data-action='upvote'" 
+                            sec:authorize="isAuthenticated()">
+                        <i class="bi bi-caret-up-fill"></i>
+                    </button>
+                    <div class="h4 mb-2" th:text="${answer.votes}">0</div>
+                    <button class="btn btn-outline-secondary btn-sm mb-2" 
+                            th:attr="data-id=${answer.id}, data-type='answer', data-action='downvote'" 
+                            sec:authorize="isAuthenticated()">
+                        <i class="bi bi-caret-down-fill"></i>
+                    </button>
+                    <div th:if="${answer.isAccepted}" class="text-success">
+                        <i class="bi bi-check-circle-fill fs-3"></i>
+                    </div>
+                    <form th:if="${!answer.isAccepted && #authentication.principal != null && question.author.username == #authentication.principal.username}"
+                          th:action="@{/answers/{id}/accept(id=${answer.id})}" method="post">
+                        <button type="submit" class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-check-circle"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="col-md-11">
+                    <div class="mb-3" th:utext="${answer.body}">Answer body</div>
+                    
+                    <!-- Image Gallery for Answer -->
+                    <div class="mb-3" th:if="${not #lists.isEmpty(answer.images)}">
+                        <div class="image-gallery">
+                            <div class="row g-2">
+                                <div class="col-md-3 col-sm-4 col-6" th:each="image : ${answer.images}">
+                                    <div class="image-container">
+                                        <img th:src="@{'/api/images/' + ${image.id}}"
+                                             class="img-fluid rounded cursor-pointer"
+                                             th:onclick="'showImage(\'' + ${image.id} + '\')'">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="btn-group" role="group" 
+                                 th:if="${#authentication.principal != null && answer.author.username == #authentication.principal.username}">
+                                <a th:href="@{/answers/{id}/edit(id=${answer.id})}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i> Sửa
+                                </a>
+                                <form th:action="@{/answers/{id}/delete(id=${answer.id})}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                            onclick="return confirm('Bạn có chắc muốn xóa?')">
+                                        <i class="bi bi-trash"></i> Xóa
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card bg-light">
+                            <div class="card-body p-2">
+                                <small class="text-muted">trả lời lúc <span th:text="${#temporals.format(answer.createdAt, 'dd/MM/yyyy HH:mm')}">date</span></small>
+                                <div class="d-flex align-items-center mt-2">
+                                    <div class="me-2">
+                                        <i class="bi bi-person-circle fs-3"></i>
+                                    </div>
+                                    <div>
+                                        <a th:href="@{/users/{id}(id=${answer.author.id})}" th:text="${answer.author.username}">username</a>
+                                        <div class="small text-muted">
+                                            <i class="bi bi-star-fill text-warning"></i> <span th:text="${answer.author.reputation}">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Post Answer Form -->
+    <div class="card mt-4" sec:authorize="isAuthenticated()">
+        <div class="card-body">
+            <h4>Câu Trả Lời Của Bạn</h4>
+            <form th:action="@{/answers/question/{id}(id=${question.id})}" method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <textarea class="form-control" name="body" rows="10" required 
+                              placeholder="Viết câu trả lời của bạn tại đây..."></textarea>
+                </div>
+
+                <!-- Image Upload Section -->
+                <div class="mb-3">
+                    <label for="answerImages" class="form-label">Thêm Ảnh (tùy chọn)</label>
+                    <input type="file" class="form-control" id="answerImages" name="images" 
+                           multiple accept="image/*" onchange="previewImages(event, 'answerImagePreview')">
+                    <small class="form-text text-muted">
+                        Bạn có thể thêm nhiều ảnh (tối đa 5MB mỗi ảnh). Định dạng: JPG, PNG, GIF
+                    </small>
+                    <div id="answerImagePreview" class="image-preview-container"></div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-send"></i> Đăng Câu Trả Lời
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="alert alert-info mt-4" sec:authorize="!isAuthenticated()">
+        <i class="bi bi-info-circle"></i> 
+        Vui lòng <a th:href="@{/login}">đăng nhập</a> để trả lời câu hỏi.
+    </div>
+</div>
+</body>
+</html>
