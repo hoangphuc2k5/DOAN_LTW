@@ -27,7 +27,7 @@ public class Report {
     @JoinColumn(name = "reporter_id", nullable = false)
     private User reporter;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(50)")
     private String entityType; // QUESTION, ANSWER, COMMENT, USER
 
     @Column(nullable = false)
@@ -40,7 +40,7 @@ public class Report {
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String description;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(50)")
     private String status = "PENDING"; // PENDING, REVIEWED, RESOLVED, DISMISSED
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -145,11 +145,6 @@
                     
                     <!-- Author & Time -->
                     <div class="question-author">
-<<<<<<< HEAD
-                        <img th:src="${question.author.profileImage != null and question.author.profileImage != '' and question.author.profileImage.startsWith('http') ? question.author.profileImage : (question.author.profileImage != null and question.author.profileImage != '' ? 'https://tungbacket.s3.ap-southeast-1.amazonaws.com/ltWeb/avatars/' + question.author.profileImage : 'https://ui-avatars.com/api/?name=' + #strings.replace(question.author.username, ' ', '+') + '&size=24&background=0D6EFD&color=fff')}"
-                             class="user-avatar" alt="avatar"
-                             onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=' + encodeURIComponent('[[${question.author.username}]]') + '&size=24&background=0D6EFD&color=fff';">
-=======
                         <img th:if="${question.author.profileImage != null and question.author.profileImage != '' and !question.author.profileImage.startsWith('http')}"
                              th:src="${'https://tungbacket.s3.ap-southeast-1.amazonaws.com/ltWeb/avatars/' + question.author.profileImage}"
                              class="user-avatar" alt="avatar"
@@ -161,7 +156,6 @@
                         <img th:if="${question.author.profileImage == null or question.author.profileImage == ''}"
                              th:src="${'https://ui-avatars.com/api/?name=' + #strings.replace(question.author.username, ' ', '+') + '&size=24&background=0D6EFD&color=fff'}"
                              class="user-avatar" alt="avatar">
->>>>>>> 1370639 ( Done 1.2)
                         <a th:href="@{/users/{id}(id=${question.author.id})}" 
                            th:text="${question.author.username}">
                             username

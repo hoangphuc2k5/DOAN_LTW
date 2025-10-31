@@ -135,15 +135,31 @@ public class MessageService {
      * Get conversation summaries for a user
      */
     public List<ConversationSummary> getConversationSummaries(User currentUser) {
+        if (currentUser == null) {
+            return new java.util.ArrayList<>();
+        }
+        
         // Get all messages where user is sender or receiver
         List<Message> allMessages = messageRepository.findBySenderOrReceiverOrderByCreatedAtDesc(
             currentUser, currentUser);
+        
+        if (allMessages == null || allMessages.isEmpty()) {
+            return new java.util.ArrayList<>();
+        }
         
         // Group by conversation partner and get latest message
         java.util.Map<Long, ConversationSummary> conversations = new java.util.LinkedHashMap<>();
         
         for (Message msg : allMessages) {
-            User partner = msg.getSender().equals(currentUser) ? msg.getReceiver() : msg.getSender();
+            if (msg == null || msg.getSender() == null || msg.getReceiver() == null) {
+                continue; // Skip invalid messages
+            }
+            
+            User partner = currentUser.equals(msg.getSender()) ? msg.getReceiver() : msg.getSender();
+            if (partner == null || partner.getId() == null) {
+                continue; // Skip if partner is invalid
+            }
+            
             Long partnerId = partner.getId();
             
             if (!conversations.containsKey(partnerId)) {

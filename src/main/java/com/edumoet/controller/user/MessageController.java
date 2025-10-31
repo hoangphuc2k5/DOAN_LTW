@@ -119,42 +119,57 @@ public class MessageController {
     // ------------------------------------------------------------
     @GetMapping("/inbox")
     public String inbox(Principal principal, Model model) {
-        if (principal == null) throw new RuntimeException("Not authenticated");
-        User current = userService.findByUsername(principal.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        try {
+            if (principal == null) {
+                return "redirect:/login";
+            }
+            
+            User current = userService.findByUsername(principal.getName())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<Map<String, Object>> conversations = new ArrayList<>();
-        var summaries = messageService.getConversationSummaries(current);
+            List<Map<String, Object>> conversations = new ArrayList<>();
+            var summaries = messageService.getConversationSummaries(current);
 
-        for (MessageService.ConversationSummary s : summaries) {
-            Map<String, Object> item = new HashMap<>();
-            item.put("username", s.getPartner().getUsername());
-            item.put("displayName", s.getPartner().getUsername());
-            item.put("avatar", resolveAvatarUrl(s.getPartner().getProfileImage(), s.getPartner().getUsername(), 48));
+            for (MessageService.ConversationSummary s : summaries) {
+                if (s == null || s.getPartner() == null) {
+                    continue; // Skip invalid summaries
+                }
+                
+                Map<String, Object> item = new HashMap<>();
+                String username = s.getPartner().getUsername() != null ? s.getPartner().getUsername() : "Unknown";
+                item.put("username", username);
+                item.put("displayName", username);
+                item.put("avatar", resolveAvatarUrl(s.getPartner().getProfileImage(), username, 48));
 
-            if (s.getLastMessage() != null) {
-                item.put("lastMessage", s.getLastMessage().getBody());
-                item.put("lastTimestamp", s.getLastTimestamp());
-                // Format timestamp for JavaScript (ISO 8601 format)
-                if (s.getLastTimestamp() != null) {
-                    item.put("lastTimestampISO", s.getLastTimestamp().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+                if (s.getLastMessage() != null) {
+                    item.put("lastMessage", s.getLastMessage().getBody() != null ? s.getLastMessage().getBody() : "");
+                    item.put("lastTimestamp", s.getLastTimestamp());
+                    // Format timestamp for JavaScript (ISO 8601 format)
+                    if (s.getLastTimestamp() != null) {
+                        item.put("lastTimestampISO", s.getLastTimestamp().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+                    } else {
+                        item.put("lastTimestampISO", null);
+                    }
                 } else {
+                    item.put("lastMessage", "");
+                    item.put("lastTimestamp", null);
                     item.put("lastTimestampISO", null);
                 }
-            } else {
-                item.put("lastMessage", "");
-                item.put("lastTimestamp", null);
-                item.put("lastTimestampISO", null);
+
+                item.put("unread", s.getUnreadCount());
+                conversations.add(item);
             }
 
-            item.put("unread", s.getUnreadCount());
-            conversations.add(item);
+            model.addAttribute("conversations", conversations);
+            model.addAttribute("currentUser", current);
+            model.addAttribute("pageTitle", "Tin nhắn");
+            return "messages/inbox";
+        } catch (Exception e) {
+            e.printStackTrace();
+            model.addAttribute("error", "Có lỗi xảy ra khi tải hộp thư: " + e.getMessage());
+            model.addAttribute("conversations", new ArrayList<>());
+            return "messages/inbox";
         }
-
-        model.addAttribute("conversations", conversations);
-        model.addAttribute("currentUser", current);
-        model.addAttribute("pageTitle", "Tin nhắn");
-        return "messages/inbox";
     }
 
     // ------------------------------------------------------------

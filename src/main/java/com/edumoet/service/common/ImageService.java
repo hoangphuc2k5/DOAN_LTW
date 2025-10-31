@@ -265,18 +265,13 @@ public class ImageService {
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
             String uuid = UUID.randomUUID().toString().substring(0, 8);
             String filename = String.format("%s_%s_%s.jpg", prefix, timestamp, uuid);
-<<<<<<< HEAD
-            String key = baseFolder + "/avatars/" + filename;
 
-            System.out.println("📤 [SAVE AVATAR] key=" + key);
-=======
             // Use consistent path: ltWeb/avatars/ to match all other controllers
             String key = "ltWeb/avatars/" + filename;
 
             System.out.println("📤 [SAVE AVATAR] key=" + key);
             System.out.println("   Bucket: " + bucketName);
             System.out.println("   Filename: " + filename);
->>>>>>> 1370639 ( Done 1.2)
 
             s3Client.putObject(
                     PutObjectRequest.builder()
@@ -286,41 +281,29 @@ public class ImageService {
                             .build(),
                     RequestBody.fromBytes(imageBytes)
             );
-<<<<<<< HEAD
-            return filename;
-        } catch (Exception e) {
-=======
+
             System.out.println("✅ [SAVE AVATAR] Successfully uploaded to S3!");
             return filename;
         } catch (Exception e) {
             System.err.println("❌ [SAVE AVATAR] Error: " + e.getMessage());
             e.printStackTrace();
->>>>>>> 1370639 ( Done 1.2)
             throw new RuntimeException("Failed to save avatar to S3: " + e.getMessage(), e);
         }
     }
 
     public void deleteAvatar(String filename) {
-<<<<<<< HEAD
-        String key = baseFolder + "/avatars/" + filename;
-=======
         // Use consistent path: ltWeb/avatars/ to match all other controllers
         String key = "ltWeb/avatars/" + filename;
->>>>>>> 1370639 ( Done 1.2)
+
         System.out.println("🗑️ [DELETE AVATAR] key=" + key);
         try {
             s3Client.deleteObject(DeleteObjectRequest.builder()
                     .bucket(bucketName)
                     .key(key)
                     .build());
-<<<<<<< HEAD
-        } catch (S3Exception e) {
-            System.out.println("⚠️ Failed to delete avatar from S3: " + e.awsErrorDetails().errorMessage());
-=======
             System.out.println("✅ [DELETE AVATAR] Successfully deleted from S3");
         } catch (S3Exception e) {
             System.out.println("⚠️ [DELETE AVATAR] Failed to delete avatar from S3: " + e.awsErrorDetails().errorMessage());
->>>>>>> 1370639 ( Done 1.2)
         }
     }
 }

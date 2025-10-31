@@ -321,7 +321,9 @@
 console.log('🔄 Messages WebSocket Chat Loading...');
 
 // WebSocket connection
-let stompClient = null;
+// Use existing stompClient from custom.js if available, otherwise create new one
+// Note: custom.js declares stompClient for notifications, we'll reuse it or create our own
+var messagesStompClient = null;
 let currentPartner = null;
 const currentUsername = document.body.getAttribute('data-current-user');
 
@@ -333,18 +335,18 @@ function connect() {
     
     try {
         const socket = new SockJS('/ws');
-        stompClient = Stomp.over(socket);
+        messagesStompClient = Stomp.over(socket);
         
         // Disable debug logs (optional)
-        // stompClient.debug = null;
+        // messagesStompClient.debug = null;
         
-        stompClient.connect({}, 
+        messagesStompClient.connect({}, 
             function(frame) {
                 console.log('✅ WebSocket Connected Successfully!');
                 console.log('Frame:', frame);
                 
                 // Subscribe to private messages
-                stompClient.subscribe('/user/queue/messages', function(message) {
+                messagesStompClient.subscribe('/user/queue/messages', function(message) {
                     console.log('📨 Received message:', message.body);
                     try {
                         // Parse JSON directly - Spring Boot handles UTF-8 automatically
@@ -401,8 +403,8 @@ function connect() {
 
 // Disconnect WebSocket
 function disconnect() {
-    if (stompClient !== null) {
-        stompClient.disconnect();
+    if (messagesStompClient !== null) {
+        messagesStompClient.disconnect();
         console.log('WebSocket Disconnected');
     }
 }
@@ -583,10 +585,10 @@ function sendMessage() {
     }
     
     console.log('Checking WebSocket connection...');
-    console.log('stompClient:', stompClient);
-    console.log('stompClient.connected:', stompClient ? stompClient.connected : 'null');
+    console.log('messagesStompClient:', messagesStompClient);
+    console.log('messagesStompClient.connected:', messagesStompClient ? messagesStompClient.connected : 'null');
     
-    if (!stompClient || !stompClient.connected) {
+    if (!messagesStompClient || !messagesStompClient.connected) {
         console.error('❌ Not connected to WebSocket server');
         alert('⚠️ Not connected to chat server.\n\nPlease check:\n1. Server is running\n2. Browser console for errors\n\nTrying to reconnect...');
         connect(); // Try to reconnect
@@ -608,7 +610,7 @@ function sendMessage() {
         const headers = {
             'content-type': 'application/json;charset=UTF-8'
         };
-        stompClient.send('/app/chat.send', headers, jsonString);
+        messagesStompClient.send('/app/chat.send', headers, jsonString);
         console.log('✅ Message sent successfully');
         
         // Clear input
@@ -774,7 +776,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Start real-time updates if WebSocket is not connected yet
-    if (!stompClient || !stompClient.connected) {
+    if (!messagesStompClient || !messagesStompClient.connected) {
         setTimeout(startTimestampUpdates, 1000);
     }
 });

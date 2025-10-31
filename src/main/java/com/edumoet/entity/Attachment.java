@@ -19,15 +19,6 @@ public class Attachment {
     private Long id;
 
     // unique stored filename
-<<<<<<< HEAD
-    @Column(nullable = false, unique = true, columnDefinition = "NVARCHAR(MAX)")
-    private String filename;
-
-    @Column(name = "original_name", nullable = false, columnDefinition = "NVARCHAR(MAX)")
-    private String originalName;
-
-    @Column(columnDefinition = "NVARCHAR(MAX)")
-=======
     @Column(nullable = false, unique = true, columnDefinition = "NVARCHAR(250)")
     private String filename;
 
@@ -35,7 +26,6 @@ public class Attachment {
     private String originalName;
 
     @Column(columnDefinition = "NVARCHAR(100)")
->>>>>>> 1370639 ( Done 1.2)
     private String contentType;
 
     private Long size;

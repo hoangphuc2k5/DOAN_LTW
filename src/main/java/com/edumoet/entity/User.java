@@ -43,10 +43,10 @@ public class User {
 
     @NotBlank
     @Size(min = 6)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(255)")
     private String password;
 
-    @Column(name = "profile_image")
+    @Column(name = "profile_image", columnDefinition = "NVARCHAR(250)")
     private String profileImage;
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
@@ -67,7 +67,7 @@ public class User {
     @Column(columnDefinition = "NVARCHAR(250)")
     private String linkedinUrl;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(50)")
     private String role = "USER";
 
     @Column(nullable = false)
@@ -126,6 +126,7 @@ public class User {
     @Column(nullable = false)
     private Boolean twoFactorEnabled = false;
 
+    @Column(columnDefinition = "NVARCHAR(250)")
     private String twoFactorSecret;
 
     @ManyToMany

@@ -106,15 +106,12 @@ public class AdminUserController {
             userMap.put("role", user.getRole());
             userMap.put("isBanned", user.getIsBanned());
             userMap.put("createdAt", user.getCreatedAt());
-<<<<<<< HEAD
             userMap.put("avatarUrl", resolveAvatarUrl(user.getProfileImage(), user.getUsername(), 32));
-=======
             String avatarUrl = resolveAvatarUrl(user.getProfileImage(), user.getUsername(), 32);
             userMap.put("avatarUrl", avatarUrl);
             System.out.println("🔍 [ADMIN USERS] User: " + user.getUsername() 
                 + " | profileImage: " + user.getProfileImage() 
                 + " | resolved URL: " + avatarUrl);
->>>>>>> 1370639 ( Done 1.2)
             return userMap;
         }).toList();
         
