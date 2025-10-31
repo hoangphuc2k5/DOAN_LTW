@@ -28,7 +28,7 @@ public class Answer {
     private Long id;
 
     @NotBlank
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String body;
 
     @Column(nullable = false)

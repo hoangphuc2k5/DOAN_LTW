@@ -14,6 +14,9 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
  * - /app: Destination prefix for sending messages to server
  * - /topic: Broadcast messages to all subscribers
  * - /queue: Private messages to specific users
+ * 
+ * Note: Spring Boot 6.0 uses UTF-8 encoding by default for JSON messages.
+ * The encoding is configured in application.properties.
  */
 @Configuration
 @EnableWebSocketMessageBroker
@@ -42,4 +45,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*");
     }
+    
+    // Note: configureMessageConverters is not needed in Spring Boot 6.0
+    // Spring Boot automatically configures JSON message converter with UTF-8 encoding
+    // based on application.properties settings (server.servlet.encoding.charset=UTF-8)
 }

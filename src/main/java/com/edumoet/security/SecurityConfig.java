@@ -14,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -52,73 +53,80 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                // Admin and Manager areas (must be first)
-                .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/manager/**").hasAnyRole("ADMIN", "MANAGER")
-                
-                // User authenticated actions (must be before permitAll)
-                // Questions & Answers
-                .requestMatchers("/questions/ask", "/questions/*/edit", "/questions/*/delete").authenticated()
-                .requestMatchers("/questions/*/images/*/delete").authenticated() // Delete images from questions
-                .requestMatchers("/questions/*/upvote", "/questions/*/downvote").authenticated()
-                .requestMatchers("/answers/create", "/answers/*/edit", "/answers/*/delete").authenticated()
-                .requestMatchers("/answers/*/upvote", "/answers/*/downvote", "/answers/*/accept").authenticated()
-                
-                // Comments
-                .requestMatchers("/questions/*/comments", "/answers/*/comments").authenticated()
-                .requestMatchers("/comments/*/delete", "/comments/*/edit").authenticated()
-                
-                // Profile & User actions
-                .requestMatchers("/profile", "/profile/edit", "/profile/update").authenticated()
-                .requestMatchers("/profile/change-password").authenticated()
-                
-                // Messages (all require authentication)
-                .requestMatchers("/messages/**").authenticated()
-                
-                // Notifications (all require authentication)
-                .requestMatchers("/notifications/**").authenticated()
-                
-                // Follow system
-                .requestMatchers("/follow/**").authenticated()
-                
-                // Reports
-                .requestMatchers("/reports/**").authenticated()
-                
-                // User management - ADMIN only for edit/delete
-                .requestMatchers("/users/*/edit", "/users/*/delete").hasRole("ADMIN")
-                
-                // Public pages (must be after authenticated matchers)
-                .requestMatchers("/", "/home").permitAll()
-                .requestMatchers("/questions", "/questions/*/view", "/questions/{id}").permitAll()
-                .requestMatchers("/tags", "/tags/**").permitAll()
-                .requestMatchers("/users", "/users/*").permitAll() // View only
-                .requestMatchers("/profile/{username}").permitAll() // Public profile view
-                
-                // Auth pages
-                .requestMatchers("/login", "/register", "/api/auth/**").permitAll()
-                
-                // Password reset
-                .requestMatchers("/password/**").permitAll()
-                
-                // Public API endpoints
-                .requestMatchers("/api/tags/**").permitAll()
-                
+                // Admin and Manager areas
+                .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasRole("ADMIN")
+                .requestMatchers(new AntPathRequestMatcher("/manager/**")).hasAnyRole("ADMIN", "MANAGER")
+
+                // Authenticated actions
+                .requestMatchers(new AntPathRequestMatcher("/questions/ask")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/questions/*/edit")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/questions/*/delete")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/questions/*/images/*/delete")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/questions/*/upvote")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/questions/*/downvote")).authenticated()
+
+                .requestMatchers(new AntPathRequestMatcher("/answers/create")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/answers/*/edit")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/answers/*/delete")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/answers/*/upvote")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/answers/*/downvote")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/answers/*/accept")).authenticated()
+
+                .requestMatchers(new AntPathRequestMatcher("/questions/*/comments")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/answers/*/comments")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/comments/*/delete")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/comments/*/edit")).authenticated()
+
+                .requestMatchers(new AntPathRequestMatcher("/profile")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/profile/edit")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/profile/update")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/profile/change-password")).authenticated()
+
+                .requestMatchers(new AntPathRequestMatcher("/messages/**")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/notifications/**")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/follow/**")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/reports/**")).authenticated()
+
+                .requestMatchers(new AntPathRequestMatcher("/users/*/edit")).hasRole("ADMIN")
+                .requestMatchers(new AntPathRequestMatcher("/users/*/delete")).hasRole("ADMIN")
+
+                // Public pages
+                .requestMatchers(new AntPathRequestMatcher("/")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/home")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/questions")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/questions/*/view")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/questions/{id}")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/tags/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/users")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/users/*")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/profile/{username}")).permitAll()
+
+                .requestMatchers(new AntPathRequestMatcher("/login")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/register")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api/auth/**")).permitAll()
+
+                .requestMatchers(new AntPathRequestMatcher("/password/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api/tags/**")).permitAll()
+
                 // Static resources
-                .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**", "/webjars/**").permitAll()
-                .requestMatchers("/uploads/**", "/attachments/**").permitAll()
-                
-                // Error pages
-                .requestMatchers("/error", "/error/**").permitAll()
-                
-                // WebSocket
-                .requestMatchers("/ws/**", "/topic/**", "/queue/**").permitAll()
-                
-                // Any other request requires authentication
+                .requestMatchers(new AntPathRequestMatcher("/css/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/js/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/images/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/static/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/webjars/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/uploads/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/attachments/**")).permitAll()
+
+                // Error & WebSocket
+                .requestMatchers(new AntPathRequestMatcher("/error/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/ws/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/topic/**")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/queue/**")).permitAll()
+
+                // Default
                 .anyRequest().authenticated()
             )
-            .exceptionHandling(exception -> exception
-                .accessDeniedPage("/error/403")
-            )
+            .exceptionHandling(exception -> exception.accessDeniedPage("/error/403"))
             .formLogin(form -> form
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
@@ -129,15 +137,16 @@ public class SecurityConfig {
                 .permitAll()
             )
             .logout(logout -> logout
-                .logoutUrl("/logout")
+                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
                 .logoutSuccessUrl("/login?logout")
                 .deleteCookies("JSESSIONID", "jwt")
                 .invalidateHttpSession(true)
                 .permitAll()
             )
-            .authenticationProvider(authenticationProvider());
+            .authenticationProvider(authenticationProvider())
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS));
 
         return http.build();
     }
 }
-

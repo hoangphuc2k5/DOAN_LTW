@@ -15,6 +15,9 @@ import com.edumoet.entity.User;
 import com.edumoet.service.common.AdminService;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Admin User Controller - Quản lý người dùng
@@ -26,6 +29,29 @@ public class AdminUserController {
 
     @Autowired
     private AdminService adminService;
+
+    /**
+     * Helper: tạo URL avatar hợp lệ (S3 hoặc fallback)
+     */
+    private String resolveAvatarUrl(String profileImage, String username, int size) {
+        // Always ensure we return a valid URL, never null or empty
+        if (profileImage != null && !profileImage.trim().isEmpty()) {
+            String trimmed = profileImage.trim();
+            if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+                return trimmed;
+            }
+            // Use consistent path: ltWeb/avatars/ to match all other controllers
+            return "https://tungbacket.s3.ap-southeast-1.amazonaws.com/ltWeb/avatars/" + trimmed;
+        }
+        // Fallback to UI Avatars service with username
+        String safeUsername = (username != null && !username.trim().isEmpty()) 
+            ? username.trim().replaceAll("\\s+", "+") 
+            : "User";
+        return "https://ui-avatars.com/api/?name=" +
+                safeUsername +
+                "&size=" + size +
+                "&background=0D6EFD&color=fff";
+    }
 
     /**
      * Danh sách người dùng
@@ -71,8 +97,28 @@ public class AdminUserController {
         model.addAttribute("bannedUsers", adminService.countBannedUsers());
         model.addAttribute("newUsersToday", 0); // TODO: implement if needed
         
+        // Create user list with resolved avatar URLs
+        List<Map<String, Object>> usersWithAvatars = users.getContent().stream().map(user -> {
+            Map<String, Object> userMap = new HashMap<>();
+            userMap.put("id", user.getId());
+            userMap.put("username", user.getUsername());
+            userMap.put("email", user.getEmail());
+            userMap.put("role", user.getRole());
+            userMap.put("isBanned", user.getIsBanned());
+            userMap.put("createdAt", user.getCreatedAt());
+            userMap.put("avatarUrl", resolveAvatarUrl(user.getProfileImage(), user.getUsername(), 32));
+            return userMap;
+        }).toList();
+        
+        // Create a new Page with the transformed content
+        Page<Map<String, Object>> usersPage = new org.springframework.data.domain.PageImpl<>(
+            usersWithAvatars,
+            users.getPageable(),
+            users.getTotalElements()
+        );
+        
         // Pagination and sorting
-        model.addAttribute("users", users);
+        model.addAttribute("users", usersPage);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", users.getTotalPages());
         model.addAttribute("totalItems", users.getTotalElements());

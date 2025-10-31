@@ -96,6 +96,7 @@
                                 <thead>
                                     <tr>
                                         <th>ID</th>
+                                        <th>Avatar</th>
                                         <th>Tên Người Dùng</th>
                                         <th>Email</th>
                                         <th>Vai Trò</th>
@@ -107,6 +108,10 @@
                                 <tbody>
                                     <tr th:each="user : ${users}">
                                         <td th:text="${user.id}">1</td>
+                                        <td>
+                                            <img th:src="${user.avatarUrl}" 
+                                                 class="rounded-circle" width="32" height="32" alt="avatar" style="object-fit: cover;">
+                                        </td>
                                         <td>
                                             <a th:href="@{/admin/users/{id}(id=${user.id})}" th:text="${user.username}">username</a>
                                         </td>
@@ -141,7 +146,7 @@
                                         </td>
                                     </tr>
                                     <tr th:if="${#lists.isEmpty(users)}">
-                                        <td colspan="7" class="text-center">Không tìm thấy người dùng nào</td>
+                                        <td colspan="8" class="text-center">Không tìm thấy người dùng nào</td>
                                     </tr>
                                 </tbody>
                             </table>

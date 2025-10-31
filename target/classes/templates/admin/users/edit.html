@@ -55,7 +55,7 @@
                                     <div class="mb-4 text-center avatar-upload-container mx-auto">
                                         <div class="mb-3">
                                             <img th:if="${user.profileImage != null && !user.profileImage.isEmpty()}" 
-                                                 th:src="@{'/uploads/avatars/' + ${user.profileImage}}" 
+                                                 th:src="@{'https://tungbacket.s3.ap-southeast-1.amazonaws.com/ltWeb/avatars/' + ${user.profileImage}}" 
                                                  class="rounded-circle border border-3 border-primary"
                                                  width="120" height="120"
                                                  style="object-fit: cover;"

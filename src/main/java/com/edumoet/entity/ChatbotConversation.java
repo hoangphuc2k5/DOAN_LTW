@@ -21,7 +21,7 @@ public class ChatbotConversation {
     @JoinColumn(name = "user_id")
     private User user;
     
-    @Column(name = "session_id", unique = true, nullable = false, columnDefinition = "NVARCHAR(255)")
+    @Column(name = "session_id", unique = true, nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String sessionId;
     
     @Column(name = "started_at", nullable = false)
@@ -33,10 +33,10 @@ public class ChatbotConversation {
     @Column(name = "is_active")
     private boolean isActive;
     
-    @Column(name = "user_ip")
+    @Column(name = "user_ip", columnDefinition = "NVARCHAR(MAX)")
     private String userIp;
-    
-    @Column(name = "user_agent")
+
+    @Column(name = "user_agent", columnDefinition = "NVARCHAR(MAX)")
     private String userAgent;
     
     @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

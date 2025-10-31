@@ -1,12 +1,16 @@
 <!DOCTYPE html>
-<html lang="en" 
+<html lang="vi" 
       xmlns:th="http://www.thymeleaf.org" 
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">EDUMOET</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" th:href="@{/icon.ico}">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -294,6 +298,8 @@
     <!-- SockJS and Stomp.js for WebSocket -->
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <!-- UTF-8 Encoding Support - Load first -->
+    <script th:src="@{/js/custom.js}"></script>
     <!-- Custom JS -->
     <script th:src="@{/js/main.js}"></script>
     <!-- Image handling script -->

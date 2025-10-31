@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" 
+<html lang="vi" 
       xmlns:th="http://www.thymeleaf.org" 
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/main}">
 <head>
+    <meta charset="UTF-8">
     <title th:text="${pageTitle}">Tin Nhắn</title>
     <style>
         /* Chat-specific styles */
@@ -196,12 +197,14 @@
                     <!-- Conversation Items -->
                     <div th:each="c : ${conversations}" class="conv-item d-flex align-items-start" role="listitem"
                          th:attr="data-username=${c.username},data-display=${c.displayName},data-avatar=${c.avatar}">
-                        <img th:src="${c.avatar != null ? c.avatar : 'https://via.placeholder.com/48'}" 
-                             alt="avatar" class="conv-avatar me-3"/>
+                        <img th:src="${c.avatar}" 
+                             alt="avatar" 
+                             class="conv-avatar me-3"/>
                         <div class="conv-main">
                             <div class="d-flex justify-content-between align-items-start mb-1">
                                 <div class="conv-name" th:text="${c.displayName}">Username</div>
                                 <div class="conv-time" th:if="${c.lastTimestamp != null}" 
+                                     th:data-timestamp="${c.lastTimestampISO}"
                                      th:text="${#temporals.format(c.lastTimestamp,'HH:mm')}">12:34</div>
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
@@ -344,14 +347,34 @@ function connect() {
                 stompClient.subscribe('/user/queue/messages', function(message) {
                     console.log('📨 Received message:', message.body);
                     try {
-                        const chatMessage = JSON.parse(message.body);
+                        // Parse JSON directly - Spring Boot handles UTF-8 automatically
+                        let messageBody = message.body;
+                        if (typeof messageBody !== 'string') {
+                            messageBody = new TextDecoder('utf-8').decode(messageBody);
+                        }
+                        const chatMessage = JSON.parse(messageBody);
+                        
+                        // Ensure content is properly decoded
+                        if (chatMessage.content) {
+                            chatMessage.content = ensureUTF8(chatMessage.content);
+                        }
+                        
                         displayMessage(chatMessage);
+                        
+                        // Update conversation list timestamp
+                        updateConversationTimestamp(chatMessage);
+                        
+                        // Refresh timestamp display
+                        updateAllTimestamps();
                     } catch (e) {
                         console.error('Error parsing message:', e);
                     }
                 });
                 
                 console.log('✅ Subscribed to /user/queue/messages for user:', currentUsername);
+                
+                // Start real-time timestamp updates
+                startTimestampUpdates();
             }, 
             function(error) {
                 console.error('❌ WebSocket Connection Error:');
@@ -410,7 +433,11 @@ document.querySelectorAll('.conv-item').forEach(item => {
         
         // Update chat header
         document.getElementById('partnerName').textContent = displayName;
-        document.getElementById('partnerAvatar').src = avatar || 'https://via.placeholder.com/40';
+        // Use avatar from data attribute or fallback to UI Avatars
+        const avatarUrl = avatar && avatar.trim() !== '' 
+            ? avatar 
+            : `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName || username)}&size=40&background=0D6EFD&color=fff`;
+        document.getElementById('partnerAvatar').src = avatarUrl;
         
         // Load messages
         loadConversation(username);
@@ -430,13 +457,55 @@ document.getElementById('leftSearch').addEventListener('input', function(e) {
     });
 });
 
+// Update conversation timestamp in list
+function updateConversationTimestamp(msg) {
+    const partner = msg.from === currentUsername ? msg.to : msg.from;
+    const convItem = document.querySelector(`.conv-item[data-username="${CSS.escape(partner)}"]`);
+    
+    if (convItem) {
+        let timeEl = convItem.querySelector('.conv-time');
+        if (!timeEl) {
+            // Create time element if it doesn't exist
+            const nameDiv = convItem.querySelector('.conv-name');
+            if (nameDiv && nameDiv.parentElement) {
+                timeEl = document.createElement('div');
+                timeEl.className = 'conv-time';
+                nameDiv.parentElement.appendChild(timeEl);
+            }
+        }
+        
+        if (timeEl) {
+            const timestamp = msg.timestamp || msg.createdAt || new Date().toISOString();
+            timeEl.setAttribute('data-timestamp', timestamp);
+            timeEl.textContent = formatConversationTime(timestamp);
+        }
+        
+        // Update last message preview
+        const previewEl = convItem.querySelector('.conv-preview');
+        if (previewEl) {
+            previewEl.textContent = msg.content || msg.body || '';
+        }
+    }
+}
+
 // Load conversation messages via AJAX
 function loadConversation(username) {
     const messagesDiv = document.getElementById('chatMessages');
     messagesDiv.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
     
-    fetch(`/messages/api/conversation/${username}`)
-        .then(response => response.json())
+    fetch(`/messages/api/conversation/${username}`, {
+        headers: {
+            'Accept': 'application/json;charset=UTF-8'
+        }
+    })
+        .then(response => {
+            // Response should be UTF-8 encoded from server
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            // Use response.json() which automatically handles UTF-8
+            return response.json();
+        })
         .then(messages => {
             messagesDiv.innerHTML = '';
             
@@ -448,10 +517,14 @@ function loadConversation(username) {
                     </div>
                 `;
             } else {
+                // Messages from database should already be UTF-8 encoded
                 messages.forEach(msg => {
                     displayMessage(msg);
                 });
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                
+                // Update timestamps after loading
+                updateAllTimestamps();
             }
         })
         .catch(error => {
@@ -475,15 +548,25 @@ function displayMessage(msg) {
     
     const bubbleClass = isMine ? 'message-bubble message-sent' : 'message-bubble message-received';
     const content = msg.content || msg.body;
+    const timestamp = msg.timestamp || msg.createdAt;
     
-    messageEl.innerHTML = `
-        <div class="${bubbleClass}">
-            ${escapeHtml(content)}
-            <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 4px;">
-                ${formatTime(msg.timestamp)}
-            </div>
-        </div>
-    `;
+    // Create message bubble with timestamp data attribute for real-time updates
+    const bubbleEl = document.createElement('div');
+    bubbleEl.className = bubbleClass;
+    
+    // Use textContent to ensure proper UTF-8 handling
+    const contentEl = document.createElement('div');
+    contentEl.textContent = content || '';
+    bubbleEl.appendChild(contentEl);
+    
+    const timeEl = document.createElement('div');
+    timeEl.style.cssText = 'font-size: 0.75rem; opacity: 0.7; margin-top: 4px;';
+    timeEl.setAttribute('data-timestamp', timestamp || new Date().toISOString());
+    timeEl.className = 'message-time';
+    timeEl.textContent = formatTime(timestamp);
+    
+    bubbleEl.appendChild(timeEl);
+    messageEl.appendChild(bubbleEl);
     
     messagesDiv.appendChild(messageEl);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
@@ -520,7 +603,12 @@ function sendMessage() {
     console.log('📤 Sending message to /app/chat.send:', chatMessage);
     
     try {
-        stompClient.send('/app/chat.send', {}, JSON.stringify(chatMessage));
+        // Ensure UTF-8 encoding for JSON
+        const jsonString = JSON.stringify(chatMessage);
+        const headers = {
+            'content-type': 'application/json;charset=UTF-8'
+        };
+        stompClient.send('/app/chat.send', headers, jsonString);
         console.log('✅ Message sent successfully');
         
         // Clear input
@@ -545,30 +633,151 @@ document.getElementById('messageInput')?.addEventListener('keypress', function(e
 
 // Utility functions
 function escapeHtml(text) {
+    if (!text) return '';
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
 
+// Ensure UTF-8 encoding for string
+function ensureUTF8(str) {
+    if (typeof str !== 'string') return str;
+    // String from JSON is already UTF-8, just return as is
+    // This function is mainly for safety and future-proofing
+    return str;
+}
+
+// Format time with real-time updates - only show hour and minute (HH:mm)
 function formatTime(timestamp) {
     if (!timestamp) return '';
     const date = new Date(timestamp);
     const now = new Date();
     const diff = now - date;
     
-    if (diff < 60000) return 'Just now';
-    if (diff < 3600000) return Math.floor(diff / 60000) + ' min ago';
-    if (diff < 86400000) return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
-           date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    // Always show HH:mm format (no seconds)
+    const timeString = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    
+    // Today (same day) - just show time
+    if (date.getDate() === now.getDate() && 
+        date.getMonth() === now.getMonth() && 
+        date.getFullYear() === now.getFullYear()) {
+        return timeString;
+    }
+    
+    // This year - show date and time
+    if (date.getFullYear() === now.getFullYear()) {
+        return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) + ' ' + timeString;
+    }
+    
+    // Older than this year - show full date and time
+    return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + timeString;
+}
+
+// Update all timestamps in real-time
+function updateAllTimestamps() {
+    // Update message timestamps in chat
+    document.querySelectorAll('.message-time').forEach(el => {
+        const timestamp = el.getAttribute('data-timestamp');
+        if (timestamp) {
+            el.textContent = formatTime(timestamp);
+        }
+    });
+    
+    // Update conversation timestamps in list
+    document.querySelectorAll('.conv-item').forEach(item => {
+        const timeEl = item.querySelector('.conv-time');
+        if (timeEl && timeEl.getAttribute('data-timestamp')) {
+            const timestamp = timeEl.getAttribute('data-timestamp');
+            timeEl.textContent = formatConversationTime(timestamp);
+        }
+    });
+}
+
+// Format time for conversation list (shorter format) - only show hour and minute (HH:mm)
+function formatConversationTime(timestamp) {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now - date;
+    
+    // Always show HH:mm format (no seconds)
+    const timeString = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    
+    // Today (same day) - just show time
+    if (date.getDate() === now.getDate() && 
+        date.getMonth() === now.getMonth() && 
+        date.getFullYear() === now.getFullYear()) {
+        return timeString;
+    }
+    
+    // Yesterday
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (date.getDate() === yesterday.getDate() && 
+        date.getMonth() === yesterday.getMonth() && 
+        date.getFullYear() === yesterday.getFullYear()) {
+        return 'Hôm qua ' + timeString;
+    }
+    
+    // This week
+    if (diff < 604800000) {
+        const days = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+        return days[date.getDay()] + ' ' + timeString;
+    }
+    
+    // Older - show date and time
+    return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) + ' ' + timeString;
+}
+
+// Start real-time timestamp updates (every 30 seconds)
+let timestampUpdateInterval = null;
+
+function startTimestampUpdates() {
+    // Clear existing interval if any
+    if (timestampUpdateInterval) {
+        clearInterval(timestampUpdateInterval);
+    }
+    
+    // Update immediately
+    updateAllTimestamps();
+    
+    // Update every 10 seconds for real-time accuracy
+    timestampUpdateInterval = setInterval(updateAllTimestamps, 10000);
+}
+
+// Stop timestamp updates
+function stopTimestampUpdates() {
+    if (timestampUpdateInterval) {
+        clearInterval(timestampUpdateInterval);
+        timestampUpdateInterval = null;
+    }
 }
 
 // Disconnect on page unload
 window.addEventListener('beforeunload', function() {
+    stopTimestampUpdates();
     disconnect();
 });
 
 console.log('✅ Messages Chat Script Loaded');
+
+// Initialize timestamp updates when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Add data-timestamp to existing conversation times
+    document.querySelectorAll('.conv-time').forEach(el => {
+        const text = el.textContent.trim();
+        if (text && !el.getAttribute('data-timestamp')) {
+            // Try to parse the time from server-side rendered text
+            // For now, we'll update on next server response or use current time
+            el.setAttribute('data-timestamp', new Date().toISOString());
+        }
+    });
+    
+    // Start real-time updates if WebSocket is not connected yet
+    if (!stompClient || !stompClient.connected) {
+        setTimeout(startTimestampUpdates, 1000);
+    }
+});
 
 // ==================== NEW MESSAGE MODAL ====================
 
@@ -681,7 +890,11 @@ function startConversation(username, avatar) {
     
     // Update chat header
     document.getElementById('partnerName').textContent = username;
-    document.getElementById('partnerAvatar').src = avatar || 'https://via.placeholder.com/40';
+    // Use avatar from parameter or fallback to UI Avatars
+    const avatarUrl = avatar && avatar.trim() !== '' 
+        ? avatar 
+        : `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&size=40&background=0D6EFD&color=fff`;
+    document.getElementById('partnerAvatar').src = avatarUrl;
     
     // Load existing messages or show empty state
     loadConversation(username);

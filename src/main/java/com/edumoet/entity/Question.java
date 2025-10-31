@@ -32,11 +32,11 @@ public class Question {
 
     @NotBlank
     @Size(max = 200)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String title;
 
     @NotBlank
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String body;
 
     @Column(nullable = false)

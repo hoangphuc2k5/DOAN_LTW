@@ -46,21 +46,25 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "profile_image")
+    @Column(name = "profile_image", columnDefinition = "NVARCHAR(MAX)")
     private String profileImage;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String about;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String bio;
 
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String location;
 
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String website;
 
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String githubUrl;
 
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String linkedinUrl;
 
     @Column(nullable = false)
@@ -113,6 +117,7 @@ public class User {
 
     private LocalDateTime bannedUntil;
 
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String banReason;
 
     @Column(nullable = false)

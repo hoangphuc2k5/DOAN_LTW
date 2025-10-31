@@ -28,9 +28,10 @@ public class Notification {
     @Column(nullable = false)
     private String type; // SYSTEM, COMMENT, ANSWER, VOTE, MESSAGE, EVENT
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(columnDefinition = "NVARCHAR(MAX)", nullable = false)
     private String message;
 
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String link;
 
     @Column(nullable = false)

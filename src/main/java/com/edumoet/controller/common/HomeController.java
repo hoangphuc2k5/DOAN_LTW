@@ -20,6 +20,29 @@ public class HomeController {
     @Autowired
     private QuestionService questionService;
 
+    /**
+     * Helper: tạo URL avatar hợp lệ (S3 hoặc fallback)
+     */
+    private String resolveAvatarUrl(String profileImage, String username, int size) {
+        // Always ensure we return a valid URL, never null or empty
+        if (profileImage != null && !profileImage.trim().isEmpty()) {
+            String trimmed = profileImage.trim();
+            if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+                return trimmed;
+            }
+            // Use consistent path: ltWeb/avatars/ to match all other controllers
+            return "https://tungbacket.s3.ap-southeast-1.amazonaws.com/ltWeb/avatars/" + trimmed;
+        }
+        // Fallback to UI Avatars service with username
+        String safeUsername = (username != null && !username.trim().isEmpty()) 
+            ? username.trim().replaceAll("\\s+", "+") 
+            : "User";
+        return "https://ui-avatars.com/api/?name=" +
+                safeUsername +
+                "&size=" + size +
+                "&background=0D6EFD&color=fff";
+    }
+
     @GetMapping({"/", "/home"})
     public String home(
             @RequestParam(defaultValue = "0") int page,

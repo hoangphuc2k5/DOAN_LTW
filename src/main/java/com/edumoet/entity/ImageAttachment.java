@@ -21,13 +21,13 @@ public class ImageAttachment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String fileName;
     
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String contentType;
     
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String path;
     
     @ManyToOne

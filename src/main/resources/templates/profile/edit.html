@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" 
+<html lang="vi" 
       xmlns:th="http://www.thymeleaf.org" 
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/main}">
@@ -46,15 +46,17 @@
                     <!-- Profile Picture Section -->
                     <div class="mb-4 text-center avatar-upload-container">
                         <div class="mb-3">
-                            <img th:if="${user.profileImage != null && !user.profileImage.isEmpty()}" 
-                                 th:src="@{'/uploads/avatars/' + ${user.profileImage}}" 
-                                 class="rounded-circle border border-3 border-primary"
-                                 width="150" height="150"
-                                 style="object-fit: cover;"
-                                 alt="Profile Picture"
-                                 id="profilePreview">
+							<img th:if="${user.profileImage != null && !user.profileImage.isEmpty()}" 
+							     th:src="${avatarUrl != null ? avatarUrl : 'https://tungbacket.s3.ap-southeast-1.amazonaws.com/ltWeb/avatars/' + user.profileImage}" 
+							     class="rounded-circle border border-3 border-primary"
+							     width="150" height="150"
+							     style="object-fit: cover;"
+							     alt="Profile Picture"
+							     id="profilePreview"
+							     onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=' + encodeURIComponent('[[${user.username}]]') + '&size=150&background=0D6EFD&color=fff&bold=true';">
+
                             <img th:if="${user.profileImage == null || user.profileImage.isEmpty()}"
-                                 th:src="@{'https://ui-avatars.com/api/?name=' + ${user.username} + '&size=150&background=0D6EFD&color=fff&bold=true'}" 
+                                 th:src="${avatarUrl != null ? avatarUrl : 'https://ui-avatars.com/api/?name=' + user.username + '&size=150&background=0D6EFD&color=fff&bold=true'}" 
                                  class="rounded-circle border border-3 border-secondary"
                                  width="150" height="150"
                                  alt="Default Avatar"
@@ -353,7 +355,48 @@ function cropAndSave() {
         
         // Set to hidden file input for form submission
         const fileInput = document.getElementById('profilePicture');
-        fileInput.files = dataTransfer.files;
+        console.log('📎 Setting file to input:', fileInput);
+        
+        // Check if DataTransfer API is supported
+        if (dataTransfer && dataTransfer.files && dataTransfer.files.length > 0) {
+            fileInput.files = dataTransfer.files;
+            console.log('✅ File set using DataTransfer API');
+            console.log('   File name:', fileInput.files[0].name);
+            console.log('   File size:', fileInput.files[0].size);
+            console.log('   File type:', fileInput.files[0].type);
+        } else {
+            console.error('❌ DataTransfer API not supported, trying alternative method...');
+            // Fallback: Create a new input and replace the old one
+            const newInput = document.createElement('input');
+            newInput.type = 'file';
+            newInput.name = 'profilePicture';
+            newInput.id = 'profilePicture';
+            newInput.className = 'd-none';
+            newInput.accept = 'image/*';
+            
+            // Create a FileList-like object using DataTransfer
+            const dt = new DataTransfer();
+            dt.items.add(croppedFile);
+            newInput.files = dt.files;
+            
+            // Replace the old input
+            const form = fileInput.closest('form');
+            fileInput.parentNode.replaceChild(newInput, fileInput);
+            
+            console.log('✅ File set using alternative method');
+        }
+        
+        // Verify file was set
+        const finalFileInput = document.getElementById('profilePicture');
+        if (finalFileInput && finalFileInput.files && finalFileInput.files.length > 0) {
+            console.log('✅ Verified: File is ready for upload');
+            console.log('   Final file name:', finalFileInput.files[0].name);
+            console.log('   Final file size:', finalFileInput.files[0].size);
+        } else {
+            console.error('❌ ERROR: File was not set correctly!');
+            alert('⚠️ Lỗi: Không thể chuẩn bị file để upload. Vui lòng thử lại.');
+            return;
+        }
         
         // Update preview
         const preview = document.getElementById('profilePreview');

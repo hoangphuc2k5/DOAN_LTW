@@ -19,12 +19,13 @@ public class Attachment {
     private Long id;
 
     // unique stored filename
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, columnDefinition = "NVARCHAR(MAX)")
     private String filename;
 
-    @Column(name = "original_name", nullable = false)
+    @Column(name = "original_name", nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String originalName;
 
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String contentType;
 
     private Long size;

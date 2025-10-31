@@ -43,7 +43,7 @@
                                 <!-- Avatar -->
                                 <div class="mb-3">
                                     <img th:if="${user.profileImage != null && !user.profileImage.isEmpty()}" 
-                                         th:src="@{'/uploads/avatars/' + ${user.profileImage}}" 
+                                         th:src="@{'https://tungbacket.s3.ap-southeast-1.amazonaws.com/ltWeb/avatars/' + ${user.profileImage}}" 
                                          class="rounded-circle border border-3 border-primary"
                                          width="150" height="150"
                                          style="object-fit: cover;"

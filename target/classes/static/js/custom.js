@@ -1,3 +1,98 @@
+// ========== UTF-8 Encoding Support ==========
+/**
+ * UTF-8 Helper Functions - Đảm bảo tất cả AJAX/Fetch requests sử dụng UTF-8
+ */
+
+// Default headers cho tất cả fetch requests
+const UTF8_HEADERS = {
+    'Content-Type': 'application/json; charset=UTF-8',
+    'Accept': 'application/json; charset=UTF-8',
+    'Accept-Charset': 'UTF-8'
+};
+
+// Wrapper function cho fetch với UTF-8 headers
+function fetchUTF8(url, options = {}) {
+    const headers = new Headers();
+    
+    // Merge UTF-8 headers với custom headers
+    Object.entries(UTF8_HEADERS).forEach(([key, value]) => {
+        headers.set(key, value);
+    });
+    
+    if (options.headers) {
+        Object.entries(options.headers).forEach(([key, value]) => {
+            headers.set(key, value);
+        });
+    }
+    
+    return fetch(url, {
+        ...options,
+        headers: headers
+    }).then(response => {
+        // Đảm bảo response được decode đúng UTF-8
+        const contentType = response.headers.get('Content-Type') || '';
+        if (contentType.includes('charset')) {
+            return response;
+        }
+        
+        // Nếu không có charset trong response, thêm vào
+        if (contentType.includes('text') || contentType.includes('json')) {
+            const newHeaders = new Headers(response.headers);
+            newHeaders.set('Content-Type', contentType + '; charset=UTF-8');
+            return new Response(response.body, {
+                status: response.status,
+                statusText: response.statusText,
+                headers: newHeaders
+            });
+        }
+        
+        return response;
+    });
+}
+
+// Helper để encode URL parameters với UTF-8
+function encodeUTF8Params(params) {
+    return Object.keys(params).map(key => {
+        return encodeURIComponent(key) + '=' + encodeURIComponent(params[key]);
+    }).join('&');
+}
+
+// Helper để decode UTF-8 text
+function decodeUTF8(text) {
+    try {
+        return decodeURIComponent(escape(text));
+    } catch (e) {
+        return text;
+    }
+}
+
+// Override global fetch để tự động thêm UTF-8 headers
+if (typeof window !== 'undefined' && window.fetch) {
+    const originalFetch = window.fetch;
+    window.fetch = function(url, options = {}) {
+        // Nếu đã có custom headers, merge với UTF-8 headers
+        if (!options.headers) {
+            options.headers = {};
+        }
+        
+        const headers = new Headers(options.headers);
+        
+        // Thêm UTF-8 headers nếu chưa có
+        if (!headers.has('Content-Type') && options.method && options.method !== 'GET') {
+            headers.set('Content-Type', 'application/json; charset=UTF-8');
+        }
+        if (!headers.has('Accept')) {
+            headers.set('Accept', 'application/json; charset=UTF-8');
+        }
+        if (!headers.has('Accept-Charset')) {
+            headers.set('Accept-Charset', 'UTF-8');
+        }
+        
+        options.headers = headers;
+        return originalFetch(url, options);
+    };
+}
+
 // WebSocket connection handling
 let stompClient = null;
 
@@ -57,15 +152,15 @@ function addImagePreview(file, container) {
 
 // Group functionality
 function searchUsers(query) {
-    return fetch(`/api/users/search?q=${encodeURIComponent(query)}`)
+        return fetchUTF8(`/api/users/search?q=${encodeURIComponent(query)}`)
         .then(response => response.json());
 }
 
 function inviteToGroup(userId, groupId) {
-    return fetch(`/api/groups/${groupId}/members/${userId}`, {
+    return fetchUTF8(`/api/groups/${groupId}/members/${userId}`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json; charset=UTF-8'
         }
     });
 }

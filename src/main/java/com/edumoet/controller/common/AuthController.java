@@ -66,10 +66,10 @@ public class AuthController {
         }
     }
 
-    // Spring Security sẽ tự động xử lý /login POST
-    // Không cần viết lại controller cho login
-
-    // Spring Security sẽ tự động xử lý /logout
-    // Không cần viết lại controller cho logout
+	    // Spring Security sẽ tự động xử lý /login POST
+	    // Không cần viết lại controller cho login
+	
+	    // Spring Security sẽ tự động xử lý /logout
+	    // Không cần viết lại controller cho logout
 }
 

@@ -1,6 +1,7 @@
 package com.edumoet.controller.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -16,13 +17,16 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.edumoet.entity.Question;
 import com.edumoet.entity.User;
-import com.edumoet.service.common.*;
+import com.edumoet.service.common.AnswerService;
+import com.edumoet.service.common.QuestionService;
+import com.edumoet.service.common.UserService;
+
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -30,7 +34,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Profile Controller - Quản lý hồ sơ cá nhân
+ * Profile Controller - Quản lý hồ sơ cá nhân (dùng AWS S3 cho avatar)
  */
 @Controller
 @RequestMapping("/profile")
@@ -41,15 +45,42 @@ public class ProfileController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-    
+
     @Autowired
     private QuestionService questionService;
-    
+
     @Autowired
     private AnswerService answerService;
-    
-    @org.springframework.beans.factory.annotation.Value("${upload.path}")
-    private String uploadPath;
+
+    // 🟢 AWS S3 dependencies
+    @Autowired
+    private S3Client s3Client;
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucketName;
+
+    @Value("${cloud.aws.s3.base-folder:uploads}")
+    private String baseFolder;
+
+    /**
+     * Helper: Resolve avatar URL from S3 or fallback to default
+     */
+    private String resolveAvatarUrl(String profileImage, String username, int size) {
+        if (profileImage != null && !profileImage.isBlank() && !profileImage.isEmpty()) {
+            // If already full URL, return as is
+            if (profileImage.startsWith("http://") || profileImage.startsWith("https://")) {
+                return profileImage;
+            }
+            // Construct S3 URL - use consistent path: ltWeb/avatars/
+            // This matches the upload path used in ProfileController and MessageController
+            return "https://tungbacket.s3.ap-southeast-1.amazonaws.com/ltWeb/avatars/" + profileImage;
+        }
+        // Fallback to UI Avatars
+        String safeUsername = (username != null && !username.trim().isEmpty()) 
+            ? username.trim().replaceAll("\\s+", "+") 
+            : "User";
+        return "https://ui-avatars.com/api/?name=" + safeUsername + "&size=" + size + "&background=0D6EFD&color=fff&bold=true";
+    }
 
     /**
      * Xem profile của mình
@@ -59,29 +90,29 @@ public class ProfileController {
         User user = userService.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
-        // Get user's data for profile display
+        // Add resolved avatar URL to model
+        model.addAttribute("avatarUrl", resolveAvatarUrl(user.getProfileImage(), user.getUsername(), 128));
+        // Add base folder for fallback in template
+        model.addAttribute("s3BaseFolder", baseFolder);
+
         Pageable pageable = PageRequest.of(0, 10, Sort.by("createdAt").descending());
-        
         Page<Question> questions = questionService.getQuestionsByAuthor(user, pageable);
         Page<com.edumoet.entity.Answer> answers = answerService.getAnswersByAuthor(user, pageable);
-        
-        // Counts
+
         Long totalQuestions = questionService.countByAuthor(user);
         Long totalAnswers = answerService.countByAuthor(user);
-        Long totalComments = 0L; // Comments removed
-        
-        // Add to model
+
         model.addAttribute("user", user);
         model.addAttribute("currentUser", user);
         model.addAttribute("questions", questions);
         model.addAttribute("answers", answers);
         model.addAttribute("totalQuestions", totalQuestions);
         model.addAttribute("totalAnswers", totalAnswers);
-        model.addAttribute("totalComments", totalComments);
-        model.addAttribute("activities", List.of()); // Empty for now
-        model.addAttribute("badges", List.of()); // Empty for now
+        model.addAttribute("totalComments", 0L);
+        model.addAttribute("activities", List.of());
+        model.addAttribute("badges", List.of());
         model.addAttribute("pageTitle", "My Profile");
-        
+
         return "profile/view";
     }
 
@@ -92,15 +123,17 @@ public class ProfileController {
     public String editProfileForm(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         User user = userService.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
         model.addAttribute("user", user);
+        // Add resolved avatar URL to model
+        model.addAttribute("avatarUrl", resolveAvatarUrl(user.getProfileImage(), user.getUsername(), 150));
+        // Add base folder for fallback in template
+        model.addAttribute("s3BaseFolder", baseFolder);
         model.addAttribute("pageTitle", "Edit Profile");
-        
         return "profile/edit";
     }
 
     /**
-     * Cập nhật profile
+     * Cập nhật profile (Upload avatar lên S3)
      */
     @PostMapping("/update")
     public String updateProfile(
@@ -113,122 +146,156 @@ public class ProfileController {
             @RequestParam(required = false) MultipartFile profilePicture,
             @AuthenticationPrincipal UserDetails userDetails,
             RedirectAttributes redirectAttributes) {
-        
+
         try {
             User user = userService.findByUsername(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("User not found"));
-            
+
             user.setEmail(email);
             user.setBio(bio);
             user.setLocation(location);
             user.setWebsite(website);
             user.setGithubUrl(githubUrl);
             user.setLinkedinUrl(linkedinUrl);
-            
-            // Handle profile picture upload
-            if (profilePicture != null && !profilePicture.isEmpty()) {
-                try {
-                    // Validate image
-                    String contentType = profilePicture.getContentType();
-                    if (contentType == null || !contentType.startsWith("image/")) {
-                        throw new IllegalArgumentException("File must be an image");
-                    }
-                    if (profilePicture.getSize() > 5 * 1024 * 1024) {
-                        throw new IllegalArgumentException("File size must be less than 5MB");
-                    }
-                    
-                    // Create avatars directory if it doesn't exist
-                    Path avatarsDir = Paths.get(uploadPath, "avatars");
-                    if (!Files.exists(avatarsDir)) {
-                        Files.createDirectories(avatarsDir);
-                    }
-                    
-                    // Delete old profile image if exists
-                    if (user.getProfileImage() != null && !user.getProfileImage().isEmpty()) {
-                        Path oldImagePath = avatarsDir.resolve(user.getProfileImage());
-                        Files.deleteIfExists(oldImagePath);
-                    }
-                    
-                    // Generate unique filename with userId + timestamp + UUID
-                    // Format: user{id}_{yyyyMMdd_HHmmss}_{uuid}.{ext}
-                    // Example: user123_20250129_143520_a1b2c3d4.jpg
-                    String originalFilename = profilePicture.getOriginalFilename();
-                    String extension = originalFilename != null && originalFilename.contains(".") ? 
-                        originalFilename.substring(originalFilename.lastIndexOf(".")) : ".jpg";
-                    
-                    String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-                    String uuid = UUID.randomUUID().toString().substring(0, 8); // Short UUID
-                    String filename = String.format("user%d_%s_%s%s", 
-                        user.getId(), timestamp, uuid, extension);
-                    
-                    // Double check: if file exists (extremely rare), append counter
-                    Path filePath = avatarsDir.resolve(filename);
-                    int counter = 1;
-                    while (Files.exists(filePath)) {
-                        filename = String.format("user%d_%s_%s_%d%s", 
-                            user.getId(), timestamp, uuid, counter, extension);
-                        filePath = avatarsDir.resolve(filename);
-                        counter++;
-                    }
-                    
-                    // Save new profile image
-                    Files.copy(profilePicture.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-                    
-                    user.setProfileImage(filename);
-                    
-                } catch (IOException e) {
-                    redirectAttributes.addFlashAttribute("errorMessage", 
-                        "❌ Error uploading profile picture: " + e.getMessage());
-                    return "redirect:/profile/edit";
-                } catch (IllegalArgumentException e) {
-                    redirectAttributes.addFlashAttribute("errorMessage", 
-                        "❌ " + e.getMessage());
-                    return "redirect:/profile/edit";
-                }
+
+            // ================== Upload Avatar lên S3 ==================
+            System.out.println("📤 [PROFILE UPDATE] Checking for avatar upload...");
+            System.out.println("   profilePicture: " + (profilePicture != null ? "NOT NULL" : "NULL"));
+            if (profilePicture != null) {
+                System.out.println("   profilePicture.isEmpty(): " + profilePicture.isEmpty());
+                System.out.println("   profilePicture.getSize(): " + profilePicture.getSize());
+                System.out.println("   profilePicture.getOriginalFilename(): " + profilePicture.getOriginalFilename());
+                System.out.println("   profilePicture.getContentType(): " + profilePicture.getContentType());
             }
             
+            if (profilePicture != null && !profilePicture.isEmpty()) {
+                System.out.println("✅ [AVATAR UPLOAD] Starting upload process...");
+                
+                String contentType = profilePicture.getContentType();
+                if (contentType == null || !contentType.startsWith("image/")) {
+                    System.out.println("❌ [AVATAR UPLOAD] Invalid content type: " + contentType);
+                    throw new IllegalArgumentException("File must be an image");
+                }
+                if (profilePicture.getSize() > 5 * 1024 * 1024) {
+                    System.out.println("❌ [AVATAR UPLOAD] File too large: " + profilePicture.getSize());
+                    throw new IllegalArgumentException("File size must be less than 5MB");
+                }
+
+                // Tạo tên file duy nhất
+                String originalFilename = profilePicture.getOriginalFilename();
+                String extension = (originalFilename != null && originalFilename.contains("."))
+                        ? originalFilename.substring(originalFilename.lastIndexOf("."))
+                        : ".jpg";
+
+                String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+                String uuid = UUID.randomUUID().toString().substring(0, 8);
+                String filename = String.format("user%d_%s_%s%s", user.getId(), timestamp, uuid, extension);
+                // Use consistent path: ltWeb/avatars/ to match all other controllers
+                String key = "ltWeb/avatars/" + filename;
+
+                System.out.println("📝 [AVATAR UPLOAD] File details:");
+                System.out.println("   Original filename: " + originalFilename);
+                System.out.println("   Generated filename: " + filename);
+                System.out.println("   S3 key: " + key);
+                System.out.println("   Content type: " + contentType);
+                System.out.println("   File size: " + profilePicture.getSize() + " bytes");
+
+                // Xoá ảnh cũ trên S3 nếu có
+                if (user.getProfileImage() != null && !user.getProfileImage().isEmpty()) {
+                    try {
+                        String oldKey = "ltWeb/avatars/" + user.getProfileImage();
+                        System.out.println("🗑️ [AVATAR UPLOAD] Deleting old avatar from S3: " + oldKey);
+                        s3Client.deleteObject(DeleteObjectRequest.builder()
+                                .bucket(bucketName)
+                                .key(oldKey)
+                                .build());
+                        System.out.println("✅ [AVATAR UPLOAD] Deleted old avatar from S3");
+                    } catch (Exception e) {
+                        System.out.println("⚠️ [AVATAR UPLOAD] Could not delete old avatar: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                }
+
+                // Upload ảnh mới
+                try {
+                    System.out.println("📤 [AVATAR UPLOAD] Uploading to S3...");
+                    System.out.println("   Bucket: " + bucketName);
+                    System.out.println("   Key: " + key);
+                    
+                    byte[] fileBytes = profilePicture.getBytes();
+                    System.out.println("   File bytes length: " + fileBytes.length);
+                    
+                    s3Client.putObject(
+                            PutObjectRequest.builder()
+                                    .bucket(bucketName)
+                                    .key(key)
+                                    .contentType(contentType)
+                                    .build(),
+                            RequestBody.fromBytes(fileBytes)
+                    );
+                    
+                    System.out.println("✅ [AVATAR UPLOAD] Successfully uploaded to S3!");
+                    user.setProfileImage(filename);
+                    System.out.println("💾 [AVATAR UPLOAD] Updated user profileImage to: " + filename);
+                } catch (Exception e) {
+                    System.err.println("❌ [AVATAR UPLOAD] Error uploading to S3: " + e.getMessage());
+                    e.printStackTrace();
+                    throw new RuntimeException("Failed to upload avatar to S3: " + e.getMessage(), e);
+                }
+            } else {
+                System.out.println("ℹ️ [PROFILE UPDATE] No avatar file to upload");
+            }
+
             userService.updateUser(user);
-            
-            redirectAttributes.addFlashAttribute("successMessage", 
-                "✅ Profile updated successfully!");
-            
+            redirectAttributes.addFlashAttribute("successMessage", "✅ Profile updated successfully!");
             return "redirect:/profile";
+
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "❌ " + e.getMessage());
+            return "redirect:/profile/edit";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", 
-                "❌ Error: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "❌ Error: " + e.getMessage());
             return "redirect:/profile/edit";
         }
     }
-    
+
     /**
-     * Xóa ảnh đại diện
+     * Xóa ảnh đại diện (trên S3)
      */
     @PostMapping("/remove-avatar")
     public String removeAvatar(
             @AuthenticationPrincipal UserDetails userDetails,
             RedirectAttributes redirectAttributes) {
-        
+
         try {
             User user = userService.findByUsername(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("User not found"));
-            
-            // Delete old profile image if exists
+
             if (user.getProfileImage() != null && !user.getProfileImage().isEmpty()) {
-                Path avatarsDir = Paths.get(uploadPath, "avatars");
-                Path imagePath = avatarsDir.resolve(user.getProfileImage());
-                Files.deleteIfExists(imagePath);
-                
+                // Use consistent path: ltWeb/avatars/ to match all other controllers
+                String key = "ltWeb/avatars/" + user.getProfileImage();
+
+                try {
+                    s3Client.deleteObject(DeleteObjectRequest.builder()
+                            .bucket(bucketName)
+                            .key(key)
+                            .build());
+                    System.out.println("🗑️ Deleted avatar from S3: " + key);
+                } catch (Exception e) {
+                    System.out.println("⚠️ Failed to delete avatar: " + e.getMessage());
+                }
+
                 user.setProfileImage(null);
                 userService.updateUser(user);
-                
-                redirectAttributes.addFlashAttribute("successMessage", 
-                    "✅ Profile picture removed successfully!");
+                redirectAttributes.addFlashAttribute("successMessage",
+                        "✅ Profile picture removed successfully!");
             }
-            
+
             return "redirect:/profile/edit";
+
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", 
-                "❌ Error: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "❌ Error: " + e.getMessage());
             return "redirect:/profile/edit";
         }
     }
@@ -252,36 +319,28 @@ public class ProfileController {
             @RequestParam String confirmPassword,
             @AuthenticationPrincipal UserDetails userDetails,
             RedirectAttributes redirectAttributes) {
-        
+
         try {
             User user = userService.findByUsername(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("User not found"));
-            
-            // Verify current password
+
             if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-                redirectAttributes.addFlashAttribute("errorMessage", 
-                    "❌ Current password is incorrect!");
+                redirectAttributes.addFlashAttribute("errorMessage", "❌ Current password is incorrect!");
                 return "redirect:/profile/change-password";
             }
-            
-            // Check if new passwords match
+
             if (!newPassword.equals(confirmPassword)) {
-                redirectAttributes.addFlashAttribute("errorMessage", 
-                    "❌ New passwords do not match!");
+                redirectAttributes.addFlashAttribute("errorMessage", "❌ New passwords do not match!");
                 return "redirect:/profile/change-password";
             }
-            
-            // Update password
+
             user.setPassword(passwordEncoder.encode(newPassword));
             userService.updateUser(user);
-            
-            redirectAttributes.addFlashAttribute("successMessage", 
-                "✅ Password changed successfully!");
-            
+            redirectAttributes.addFlashAttribute("successMessage", "✅ Password changed successfully!");
             return "redirect:/profile";
+
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", 
-                "❌ Error: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "❌ Error: " + e.getMessage());
             return "redirect:/profile/change-password";
         }
     }
@@ -293,15 +352,18 @@ public class ProfileController {
     public String viewUserProfile(@PathVariable String username, Model model) {
         User user = userService.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         model.addAttribute("user", user);
+        // Add resolved avatar URL to model
+        model.addAttribute("avatarUrl", resolveAvatarUrl(user.getProfileImage(), user.getUsername(), 128));
+        // Add base folder for fallback in template
+        model.addAttribute("s3BaseFolder", baseFolder);
         model.addAttribute("pageTitle", username + "'s Profile");
-        
         return "profile/public-view";
     }
-    
+
     /**
-     * My Questions - Hiển thị tất cả câu hỏi của user (kể cả pending)
+     * Danh sách câu hỏi của tôi
      */
     @GetMapping("/my-questions")
     public String myQuestions(
@@ -310,39 +372,35 @@ public class ProfileController {
             @RequestParam(defaultValue = "all") String filter,
             Principal principal,
             Model model) {
-        
+
         if (principal == null) {
             return "redirect:/login";
         }
-        
+
         User currentUser = userService.findByUsername(principal.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Question> questions;
-        
+
         switch (filter) {
             case "pending":
-                // Chỉ hiện câu hỏi chưa duyệt
                 questions = questionService.getPendingQuestionsByAuthor(currentUser, pageable);
                 break;
             case "approved":
-                // Chỉ hiện câu hỏi đã duyệt
                 questions = questionService.getApprovedQuestionsByAuthor(currentUser, pageable);
                 break;
             default:
-                // Hiện tất cả
                 questions = questionService.getQuestionsByAuthor(currentUser, pageable);
                 break;
         }
-        
+
         model.addAttribute("questions", questions);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", questions.getTotalPages());
         model.addAttribute("filter", filter);
         model.addAttribute("pageTitle", "My Questions - EDUMOET");
-        
+
         return "profile/my-questions";
     }
 }
-

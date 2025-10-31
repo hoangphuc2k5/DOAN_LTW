@@ -30,11 +30,11 @@ public class Message {
     @JoinColumn(name = "receiver_id", nullable = false)
     private User receiver;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String subject;
 
     @NotBlank
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(columnDefinition = "NVARCHAR(MAX)", nullable = false)
     private String body;
 
     @Column(nullable = false)

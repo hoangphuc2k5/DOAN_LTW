@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" 
+<html lang="vi" 
       xmlns:th="http://www.thymeleaf.org" 
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
@@ -145,8 +145,9 @@
                     
                     <!-- Author & Time -->
                     <div class="question-author">
-                        <img th:src="${question.author.profileImage != null ? '/uploads/avatars/' + question.author.profileImage : 'https://via.placeholder.com/24'}" 
-                             class="user-avatar" alt="avatar">
+                        <img th:src="${question.author.profileImage != null and question.author.profileImage != '' and question.author.profileImage.startsWith('http') ? question.author.profileImage : (question.author.profileImage != null and question.author.profileImage != '' ? 'https://tungbacket.s3.ap-southeast-1.amazonaws.com/ltWeb/avatars/' + question.author.profileImage : 'https://ui-avatars.com/api/?name=' + #strings.replace(question.author.username, ' ', '+') + '&size=24&background=0D6EFD&color=fff')}"
+                             class="user-avatar" alt="avatar"
+                             onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=' + encodeURIComponent('[[${question.author.username}]]') + '&size=24&background=0D6EFD&color=fff';">
                         <a th:href="@{/users/{id}(id=${question.author.id})}" 
                            th:text="${question.author.username}">
                             username

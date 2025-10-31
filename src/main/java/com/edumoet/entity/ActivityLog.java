@@ -30,10 +30,10 @@ public class ActivityLog {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String action; // CREATE_QUESTION, POST_ANSWER, VOTE, LOGIN, ADMIN_ACTION, etc.
 
-    @Column(nullable = true)
+    @Column(nullable = true, columnDefinition = "NVARCHAR(MAX)")
     private String entityType; // QUESTION, ANSWER, COMMENT, USER, SYSTEM
 
     private Long entityId;
@@ -41,8 +41,10 @@ public class ActivityLog {
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String details;
 
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String ipAddress;
 
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String userAgent;
 
     @CreatedDate

@@ -27,10 +27,10 @@ public class Tag {
     private Long id;
 
     @NotBlank
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String name;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String description;
 
     @Column(nullable = false)
