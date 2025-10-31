@@ -15,7 +15,7 @@
             <div class="row align-items-center">
                 <!-- Avatar -->
                 <div class="col-auto">
-                    <img th:src="${user.profileImage != null ? '/uploads/avatars/' + user.profileImage : 'https://ui-avatars.com/api/?name=' + user.username + '&size=128&background=0a95ff&color=fff'}" 
+                    <img th:src="${user.profileImage != null ? 'https://tungbacket.s3.ap-southeast-1.amazonaws.com/ltWeb/avatars/' + user.profileImage : 'https://ui-avatars.com/api/?name=' + user.username + '&size=128&background=0a95ff&color=fff'}" 
                          class="rounded-circle" 
                          width="128" 
                          height="128" 

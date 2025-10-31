@@ -3,7 +3,6 @@ package com.edumoet.service.common;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.edumoet.entity.Answer;
@@ -14,16 +13,16 @@ import com.edumoet.repository.AnswerRepository;
 import com.edumoet.repository.ImageAttachmentRepository;
 import com.edumoet.repository.QuestionRepository;
 
-import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
@@ -40,6 +39,9 @@ public class ImageService {
     @Value("${cloud.aws.s3.base-folder:uploads}")
     private String baseFolder;
 
+    @Value("${cloud.aws.region:ap-southeast-1}")
+    private String region;
+
     @Autowired
     private ImageAttachmentRepository imageAttachmentRepository;
     @Autowired
@@ -54,15 +56,16 @@ public class ImageService {
         validateImage(file);
 
         String originalFilename = file.getOriginalFilename();
-        String extension = (originalFilename != null && originalFilename.contains("."))
-                ? originalFilename.substring(originalFilename.lastIndexOf("."))
-                : ".jpg";
+        String extension = (originalFilename != null && originalFilename.contains(".")) ?
+                originalFilename.substring(originalFilename.lastIndexOf(".")) : ".jpg";
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
         String uuid = UUID.randomUUID().toString().substring(0, 8);
         String typePrefix = questionId != null ? "q" + questionId :
                 answerId != null ? "a" + answerId : "img";
         String newFilename = String.format("%s_%s_%s%s", typePrefix, timestamp, uuid, extension);
         String key = baseFolder + "/" + newFilename;
+
+        System.out.println("📤 [SAVE IMAGE] Upload to S3 | bucket=" + bucketName + " | key=" + key);
 
         try {
             s3Client.putObject(
@@ -82,6 +85,7 @@ public class ImageService {
         attachment.setPath(newFilename);
         attachment.setContentType(file.getContentType());
         attachment.setUploadedBy(uploadedBy);
+        attachment.setCreatedAt(LocalDateTime.now());
 
         if (questionId != null) {
             Question question = questionRepository.findById(questionId)
@@ -108,6 +112,8 @@ public class ImageService {
         String uuid = UUID.randomUUID().toString().substring(0, 8);
         String filename = String.format("q%d_%s_%s%s", question.getId(), timestamp, uuid, extension);
         String key = baseFolder + "/" + filename;
+
+        System.out.println("📤 [SAVE QUESTION IMAGE] key=" + key);
 
         s3Client.putObject(
                 PutObjectRequest.builder()
@@ -139,6 +145,8 @@ public class ImageService {
         String filename = String.format("a%d_%s_%s%s", answer.getId(), timestamp, uuid, extension);
         String key = baseFolder + "/" + filename;
 
+        System.out.println("📤 [SAVE ANSWER IMAGE] key=" + key);
+
         s3Client.putObject(
                 PutObjectRequest.builder()
                         .bucket(bucketName)
@@ -161,6 +169,7 @@ public class ImageService {
     // ================== DELETE IMAGE ==================
     public void deleteImage(ImageAttachment attachment) throws IOException {
         String key = baseFolder + "/" + attachment.getPath();
+        System.out.println("🗑️ [DELETE IMAGE] key=" + key);
         try {
             s3Client.deleteObject(DeleteObjectRequest.builder()
                     .bucket(bucketName)
@@ -173,15 +182,30 @@ public class ImageService {
         System.out.println("✅ Image record deleted from DB and S3");
     }
 
-    // ================== GET IMAGE DATA ==================
+    // ================== GET IMAGE DATA (via public S3 URL) ==================
     public byte[] getImageData(ImageAttachment attachment) throws IOException {
-        String key = baseFolder + "/" + attachment.getPath();
-        try {
-            ResponseBytes<GetObjectResponse> objectBytes = s3Client.getObjectAsBytes(
-                    GetObjectRequest.builder().bucket(bucketName).key(key).build());
-            return objectBytes.asByteArray();
-        } catch (S3Exception e) {
-            throw new IOException("Failed to download image from S3: " + e.awsErrorDetails().errorMessage(), e);
+        // 🔹 Đọc ảnh qua link công khai trên S3 thay vì SDK
+        String fileUrl = String.format(
+                "https://%s.s3.%s.amazonaws.com/%s/%s",
+                bucketName, region, baseFolder, attachment.getPath());
+
+        System.out.println("🌐 [READ IMAGE FROM URL] " + fileUrl);
+
+        URL url = new URL(fileUrl);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        connection.setConnectTimeout(8000);
+        connection.setReadTimeout(10000);
+
+        int responseCode = connection.getResponseCode();
+        if (responseCode != HttpURLConnection.HTTP_OK) {
+            throw new IOException("Failed to fetch image from S3 (HTTP " + responseCode + ")");
+        }
+
+        try (InputStream in = connection.getInputStream()) {
+            return in.readAllBytes();
+        } finally {
+            connection.disconnect();
         }
     }
 
@@ -243,6 +267,8 @@ public class ImageService {
             String filename = String.format("%s_%s_%s.jpg", prefix, timestamp, uuid);
             String key = baseFolder + "/avatars/" + filename;
 
+            System.out.println("📤 [SAVE AVATAR] key=" + key);
+
             s3Client.putObject(
                     PutObjectRequest.builder()
                             .bucket(bucketName)
@@ -258,10 +284,12 @@ public class ImageService {
     }
 
     public void deleteAvatar(String filename) {
+        String key = baseFolder + "/avatars/" + filename;
+        System.out.println("🗑️ [DELETE AVATAR] key=" + key);
         try {
             s3Client.deleteObject(DeleteObjectRequest.builder()
                     .bucket(bucketName)
-                    .key(baseFolder + "/avatars/" + filename)
+                    .key(key)
                     .build());
         } catch (S3Exception e) {
             System.out.println("⚠️ Failed to delete avatar from S3: " + e.awsErrorDetails().errorMessage());
