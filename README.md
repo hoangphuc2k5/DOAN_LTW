@@ -42,6 +42,7 @@ EDMOET là một hệ thống hỏi đáp trực tuyến được thiết kế �
 - ✅ Tương tác với chatbot thông minh được tích hợp OpenAI
 - ✅ Quản lý nội dung với hệ thống kiểm duyệt và báo cáo
 - ✅ Giao tiếp với người dùng khác qua tin nhắn
+- Truy cập trang web sau : http://edumoet.ap-southeast-1.elasticbeanstalk.com/admin/activity-logs
 
 ---
 
